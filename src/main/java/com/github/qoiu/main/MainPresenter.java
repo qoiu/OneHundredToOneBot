@@ -4,9 +4,12 @@ import com.github.qoiu.main.bot.BotInterface;
 import com.github.qoiu.main.bot.CallbackActions;
 import com.github.qoiu.main.bot.StateActions;
 import com.github.qoiu.main.data.WorkWithDb;
+import javafx.util.Pair;
 import org.telegram.telegrambots.meta.api.objects.User;
 
-public class MainPresenter implements MainPresenterInterface,MainPresenterCallbackInterface, WorkWithDb {
+import java.util.List;
+
+public class MainPresenter implements MainPresenterInterface,MainPresenterCallbackInterface {
     MainPresenter(BotInterface bot, WorkWithDb db) {
         this.bot = bot;
         this.db = db;
@@ -18,43 +21,32 @@ public class MainPresenter implements MainPresenterInterface,MainPresenterCallba
     private StateActions stateActions = new StateActions();
     private CallbackActions callbackActions = new CallbackActions(this);
 
+    @Override
+    public List<Pair<Long, Integer>> getDisconnectedMessages() {
+        return db.getDisconnectedMessages();
+    }
+
+    @Override
+    public void saveMsg(Pair<Long, Integer> pair) {
+        db.saveMsg(pair);
+    }
+
+    @Override
+    public void deletedMsg(Pair<Long, Integer> pair) {
+        db.deletedMsg(pair);
+    }
+
     public void receiveMessage(User user, String message){
-        if(!isUserExists(user.getId())){
-            addUser(user.getId(), user.getUserName());
+        if(!db.isUserExists(user.getId())){
+            db.addUser(user.getId(), user.getUserName());
         }
-        db.changeUserState(user.getId(), stateActions.action(user.getId(),getUserState(user.getId()), bot));
+        db.changeUserState(user.getId(), stateActions.action(user.getId(), db.getUserState(user.getId()), bot));
     }
 
     @Override
     public void receiveCallback(User user, String message) {
         Integer status = db.getUserState(user.getId());
         db.changeUserState(user.getId(),callbackActions.action(user.getId(),status,message,bot));
-    }
-
-    public void addUser(long id, String name) {
-        db.addUser(id,name);
-    }
-
-    @Override
-    public Boolean isUserExists(long id) {
-        return db.isUserExists(id);
-    }
-
-    public String getUser(long id) {
-        return db.getUser(id);
-    }
-
-    public void changeUserState(long id, int state) {
-        db.changeUserState(id, state);
-    }
-
-    public Integer getUserState(long id) {
-        return db.getUserState(id);
-    }
-
-    @Override
-    public void createGameForPlayer(long id) {
-        db.createGameForPlayer(id);
     }
 
     @Override

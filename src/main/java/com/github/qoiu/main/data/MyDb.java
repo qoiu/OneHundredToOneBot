@@ -1,91 +1,48 @@
 package com.github.qoiu.main.data;
 
-import java.sql.*;
+import javafx.util.Pair;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MyDb implements DbService, User, WorkWithDb {
+public class MyDb extends DatabaseBase implements WorkWithDb {
 
-    private static Connection connection;
-    private static Statement stmt;
-
-    public void start() {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:game.db");
-            stmt = connection.createStatement();
-            connection.prepareStatement("UPDATE users SET state = 0").execute();
-        } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-            disconnect();
-        }
-    }
-
-    private void disconnect() {
-        try {
-            if (stmt != null) {
-                stmt.close();
-            }
-            if (connection != null) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void add(long id, String name) {
-        try {
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO users (id, name, state) VALUES (?,?,0)");
-            ps.setString(1, String.valueOf(id));
-            ps.setString(2, name);
-            ps.execute();
-            ps.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+    private static final String ERROR = "Error";
 
     @Override
+    public void addUser(long id, String name) {
+        execute("INSERT INTO users (id, name, state) VALUES (?,?,0)", id, name);
+    }
+
+    private String userSelect(String type, long id) {
+        ResultSet result = executeQuery("SELECT*FROM users WHERE id = " + id);
+        try {
+            return result.getString(type);
+        } catch (SQLException|NullPointerException e) {
+            e.printStackTrace();
+            return ERROR;
+        }
+    }
+
     public Boolean isUserExists(long id) {
-        String name;
-        try {
-            name = userSelect("name", id);
-        } catch (SQLException e) {
-            name = "";
-        }
-        return !name.isEmpty();
+        String name = userSelect("name", id);
+        return (!name.equals(ERROR)) && !name.isEmpty();
     }
 
-    public String getById(long id) {
-        try {
-            return userSelect("name", id);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return "";
-        }
+    public String getUserNameById(long id) {
+        String name = userSelect("name",id);
+        return (name.equals(ERROR))?"":name;
     }
 
-    private static String userSelect(String type, long id) throws SQLException {
-        PreparedStatement ps =
-                connection.prepareStatement("SELECT id,name,state FROM users WHERE id = ?;");
-        ps.setLong(1, id);
-        return ps.executeQuery().getString(type);
+    public void changeUserState(long id, int state) {
+        executeUpdate("UPDATE users SET state = ? WHERE id = ?",state,id);
     }
 
-    public void changeState(long id, int state) {
+    public Integer getUserState(long id) {
+        ResultSet result = executeQuery("SELECT id,name,state FROM users WHERE id = ?;", id);
         try {
-            PreparedStatement ps = connection.prepareStatement("UPDATE users SET state = ? WHERE id = ?");
-            ps.setInt(1, state);
-            ps.setLong(2, id);
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Integer getState(long id) {
-        try {
-            return Integer.parseInt(userSelect("state", id));
+            return result==null?0:result.getInt("state");
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
@@ -93,48 +50,13 @@ public class MyDb implements DbService, User, WorkWithDb {
     }
 
     @Override
-    public void addUser(long id, String name) {
-        add(id, name);
-    }
-
-    @Override
-    public String getUser(long id) {
-        return getById(id);
-    }
-
-    @Override
-    public void changeUserState(long id, int state) {
-        changeState(id, state);
-    }
-
-    @Override
-    public Integer getUserState(long id) {
-        return getState(id);
-    }
-
-    @Override
-    public void createGameForPlayer(long id) {
+    public void createGameForPlayer(long id, String gameName) {
         try {
-            connection.prepareStatement("DELETE FROM userInGame WHERE userId = " + id).execute();
-            connection.prepareStatement("DELETE FROM game WHERE hostDialogId = " + id).execute();
-            connection.prepareStatement("INSERT INTO game(gameName,hostDialogId) VALUES (\"newGame\"," + id + ")").execute();
-            int gameId =
-                    connection.prepareStatement("SELECT id FROM game ORDER BY id DESC LIMIT 1")
-                            .executeQuery()
-                            .getInt("id");
-            addPlayer(gameId, id);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void addPlayer(int gameId, long playerId) {
-        try {
-            PreparedStatement  ps = connection.prepareStatement("INSERT INTO userInGame (gameId, userId) VALUES (?,?)");
-            ps.setLong(1, gameId);
-            ps.setLong(2, playerId);
-            ps.execute();
-            ps.close();
+            execute("DELETE FROM userInGame WHERE userId = " + id);
+            execute("DELETE FROM game WHERE userId = " + id);
+            execute("INSERT INTO game(gameName,hostDialogId) VALUES (\"newGame\"," + id + ")");
+            int gameId = executeQuery("SELECT id FROM game ORDER BY id DESC LIMIT 1").getInt("id");
+            execute("INSERT INTO userInGame (gameId, userId) VALUES (?,?)",gameId,id);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -142,11 +64,34 @@ public class MyDb implements DbService, User, WorkWithDb {
     
     public int getGameId(long playerId){
         try {
-            return connection.prepareStatement("SELECT id FROM game WHERE hostDialogId = " + playerId)
-                            .executeQuery()
-                            .getInt("id");
+            return executeQuery("SELECT id FROM game WHERE hostDialogId = " + playerId).getInt("id");
         } catch (SQLException e) {
             return 0;
         }
+    }
+
+    @Override
+    public List<Pair<Long, Integer>> getDisconnectedMessages() {
+        ResultSet set = executeQuery("SELECT id,message FROM lostMessages");
+        ArrayList<Pair<Long, Integer>> list = new ArrayList<>();
+        try {
+            while (set.next()){
+                list.add(new Pair<>(set.getLong("id"), set.getInt("message")));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public void saveMsg(Pair<Long, Integer> pair) {
+        execute("INSERT INTO lostMessages (id, message) VALUES (?,?)",pair.getKey(),pair.getValue());
+    }
+
+    @Override
+    public void deletedMsg(Pair<Long, Integer> pair) {
+        execute("DELETE FROM lostMessages WHERE  id=? AND message =?",  pair.getKey(),pair.getValue());
     }
 }
