@@ -5,12 +5,10 @@ import com.github.qoiu.main.StateStatus;
 public class StateActions {
 
     public Integer action(long id,int state, BotInterface bot){
-        PreparedSendMessages messages = new PreparedSendMessages();
         switch (state){
-            case StateStatus.BASE_STATUS:
-                bot.sendMessage(messages.mainMenu(String.valueOf(id)));
-                return StateStatus.WAITING_ACTION;
+            case StateStatus.PLAYER_BASE_STATUS:
+                return StateStatus.PLAYER_WAITING_ACTION;
         }
-        return StateStatus.BASE_STATUS;
+        return StateStatus.PLAYER_BASE_STATUS;
     }
 }

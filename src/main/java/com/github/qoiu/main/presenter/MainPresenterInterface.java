@@ -1,4 +1,4 @@
-package com.github.qoiu.main;
+package com.github.qoiu.main.presenter;
 
 import javafx.util.Pair;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -11,4 +11,5 @@ public interface MainPresenterInterface {
     void deletedMsg(Pair<Long,Integer> pair);
     void receiveMessage(User user, String message);
     void receiveCallback(User user, String message);
+    void startGame(User user);
 }

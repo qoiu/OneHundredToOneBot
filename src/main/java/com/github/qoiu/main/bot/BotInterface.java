@@ -1,6 +1,6 @@
 package com.github.qoiu.main.bot;
 
-import com.github.qoiu.main.MainPresenterInterface;
+import com.github.qoiu.main.presenter.MainPresenterInterface;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 public interface BotInterface {

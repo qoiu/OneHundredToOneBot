@@ -1,6 +1,6 @@
 package com.github.qoiu.main.bot;
 
-import com.github.qoiu.main.MainPresenterInterface;
+import com.github.qoiu.main.presenter.MainPresenterInterface;
 import javafx.util.Pair;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -26,13 +26,13 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
 
     @Override
     public void onClosing() {
-        for (int i=0;i<history.size();i++){
-            deleteMsg(history.get(i));
+        for (Message message : history) {
+            deleteMsg(message);
         }
         PreparedSendMessages messages = new PreparedSendMessages();
         for (Long user:users) {
             try {
-                Message sent = execute(messages.botDown(user));
+                Message sent = execute(messages.botDown(String.valueOf(user)));
                 presenter.saveMsg(new Pair<>(sent.getChatId(), sent.getMessageId()));
             } catch (TelegramApiException e) {
                 e.printStackTrace();
@@ -57,7 +57,7 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
         }
         PreparedSendMessages sendMessages = new PreparedSendMessages();
         for (Long id:users){
-            sendMessage(sendMessages.isAlive(id));
+            sendMessage(sendMessages.isAlive(String.valueOf(id)));
         }
     }
 

@@ -1,8 +1,8 @@
-package com.github.qoiu.main.data;
+package com.github.qoiu.main.data.tables;
 
 import java.sql.*;
 
-abstract class DatabaseBase implements DbService{
+public abstract class DatabaseBase {
 
     private static Connection connection;
 
@@ -26,14 +26,16 @@ abstract class DatabaseBase implements DbService{
         }
     }
 
-    void executeUpdate(String sql, Object... args){
+    int executeUpdate(String sql, Object... args){
         try {
             PreparedStatement statement = statementWithArgs(sql, args);
-            statement.executeUpdate();
+            int id = statement.executeUpdate();
             statement.close();
+            return id;
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return 0;
     }
 
     private PreparedStatement statementWithArgs(String sql, Object... args) throws SQLException {
@@ -58,18 +60,17 @@ abstract class DatabaseBase implements DbService{
         return statement;
     }
 
-    public void start() {
+    public static void start() {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:game.db");
-            execute("UPDATE users SET state = 0");
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
             disconnect();
         }
     }
 
-    private void disconnect() {
+    private static void disconnect() {
         try {
             if (connection != null) {
                 connection.close();
