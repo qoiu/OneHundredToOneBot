@@ -8,6 +8,7 @@ public class UserDb {
     private final long id;
     private int status;
     private final String name;
+    private Object extra;
 
     public UserDb(long id, int status, String name) {
         this.id = id;
@@ -41,18 +42,22 @@ public class UserDb {
         this.status = status;
     }
 
+    public Object getExtra() {
+        return extra;
+    }
+
+    public void setExtra(Object extra) {
+        this.extra = extra;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if(o instanceof UserInGameDb)return(((UserInGameDb)o).getId()==this.id);
+        if(o instanceof PlayerDb)return(((PlayerDb)o).getId()==this.id);
         if (o == null || getClass() != o.getClass()) return false;
 
         UserDb that = (UserDb) o;
         return id == that.id && status == that.status && Objects.equals(name, that.name);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, status, name);
-    }
 }

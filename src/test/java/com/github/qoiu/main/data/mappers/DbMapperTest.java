@@ -1,33 +1,27 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.GameObject;
-import com.github.qoiu.main.data.UserDb;
-import com.github.qoiu.main.data.UserMessaged;
-import com.github.qoiu.main.data.tables.DatabaseBase;
-import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import com.github.qoiu.main.data.*;
+import com.github.qoiu.main.data.DatabaseBase;
+import org.junit.*;
 
 import javax.validation.constraints.Null;
 import java.util.List;
 
 public class DbMapperTest {
 
-    private DatabaseBase db;
+    private static DatabaseBase db;
 
-    @BeforeTest
-    void create() {
+    @BeforeClass
+    public static void create() {
         db = new DatabaseBase("jdbc:sqlite:test.db");
     }
 
 
     @Test
-    void test_DbMapperGameId() {
+    public void test_DbMapperGameId() {
 
         UserDb user = new UserDb(112L, 0, "zozo");
-        int actualGameId = new <Integer, UserMessaged>DbMapperCreateGameForPlayer(db)
+        int actualGameId = new DbMapperCreateGameForPlayer(db)
                 .map(user);
 
         int gameId = new DbMapperGameId(db).map(112L);
@@ -38,23 +32,41 @@ public class DbMapperTest {
     }
 
     @Test
-    void test_DbMapperGame() {
+    public void test_DbMapperGame() {
+
+        GameObject game = new DbMapperGetGameById(db).map(112);
+        Assert.assertEquals(game.getName(),"Error");
 
         UserDb user = new UserDb(112L, 0, "zozo");
-        int actualGameId = new <Integer, UserMessaged>DbMapperCreateGameForPlayer(db)
+        int actualGameId = new DbMapperCreateGameForPlayer(db)
                 .map(user);
 
-        GameObject game = new <GameObject, Long>DbMapperGameById(db).map(112);
+        game = new <GameObject, Long>DbMapperGetGameById(db).map(112);
 
         Assert.assertNotNull(game);
         GameObject expected = new GameObject("zozo", 112L, actualGameId);
         Assert.assertEquals(game, expected);
+        Assert.assertEquals(game.getUserInGames().size(),1);
         int gameIncorrectId = new DbMapperGameId(db).map(145L);
         Assert.assertEquals(gameIncorrectId, 0);
     }
 
     @Test
-    void test_DbMapperAllGames() {
+    public void test_DbMapperAllGames_exceptions(){
+        List<GameObject> games = new DbMapperAllGames(db).map(null);
+        Assert.assertEquals(games.size(),0);
+        UserDb user1 = new UserDb(112L, 0, "lolko");
+
+        Integer game1 = new DbMapperCreateGameForPlayer(db)
+                .map(user1);
+        new DbMapperDeletePlayer(db).map(user1.getId());
+        games = new <List<GameObject>, Null>DbMapperAllGames(db).map(null);
+        Assert.assertEquals(games.get(0).getUserInGames().size(),0);
+    }
+
+    @Test
+    public void test_DbMapperAllGames() {
+
 
 
         UserDb user1 = new UserDb(112L, 0, "lolko");
@@ -65,16 +77,16 @@ public class DbMapperTest {
         new DbMapperAddUser(db).map(user2);
         new DbMapperAddUser(db).map(user3);
 
-        Integer game1 = new <Integer, UserMessaged>DbMapperCreateGameForPlayer(db)
+        Integer game1 = new DbMapperCreateGameForPlayer(db)
                 .map(user1);
 
-        Integer game2 = new <Integer, UserMessaged>DbMapperCreateGameForPlayer(db)
+        Integer game2 = new DbMapperCreateGameForPlayer(db)
                 .map(user2);
 
-        Integer game3 = new <Integer, UserMessaged>DbMapperCreateGameForPlayer(db)
+        Integer game3 = new DbMapperCreateGameForPlayer(db)
                 .map(user3);
 
-        new DbMapperConnectPlayer(db,game1).map(user2);
+        new DbMapperAddPlayer(db,game1).map(user2);
 
         List<GameObject> games = new <List<GameObject>, Null>DbMapperAllGames(db).map(null);
 
@@ -87,7 +99,7 @@ public class DbMapperTest {
     }
 
     @Test
-    void test_execute_update() {
+    public void test_execute_update() {
         String name;
         name = new DbMapperGetUserById(db).map(1112L).getName();
         //this mapper will get SQLException cause no user in db
@@ -95,37 +107,71 @@ public class DbMapperTest {
 
         UserDb user = new UserDb(1112L, 0, "lolko");
         int gameId = new DbMapperAddUser(db).map(user);
-        name = new DbMapperGetUserById(db).map(1112L).getName();
+        UserDb actual = new DbMapperGetUserById(db).map(1112L);
 
-        Assert.assertEquals(name, user.getName());
+        Assert.assertEquals(actual,user);
     }
 
     @Test
-    void test_change_userInGame_status(){
+    public void test_change_userInGame_status(){
         UserDb user = new UserDb(1112L, 0, "lolko");
 
+        PlayerDb playerDb = new PlayerDb(user.getId(),0,0);
         new DbMapperCreateGameForPlayer(db).map(user);
+        new DbMapperAddUser(db).map(user);
 
-        user.setStatus(3);
-        new DbMapperUpdateUserInGameStatus(db).map(user);
+        playerDb.setPlayerStatus(3);
+        new DbMapperUpdateUserInGameStatus(db).map(playerDb);
 
-        List<GameObject> games = new <List<GameObject>, Null>DbMapperAllGames(db).map(null);
+        List<GameObject> games = new DbMapperAllGames(db).map(null);
 
 
-        Assert.assertEquals(games.get(0).getUserInGames().get(0).getStatusGame(),3L);
+        Assert.assertEquals(games.get(0).getUserInGames().get(0).getPlayerStatus(),3);
     }
 
+    @Test
+    public void test_user_update(){
+        UserDb user = new UserDb(1112L, 0, "lolko");
+        new DbMapperAddUser(db).map(user);
+        user.setStatus(3);
+        new DbMapperUpdateUser(db).map(user);
+        UserDb actual = new DbMapperGetUserById(db).map(user.getId());
+        Assert.assertEquals(actual.getStatusId(),3);
+    }
 
-    @AfterTest
-    @BeforeMethod
-    void clearTables() {
+    @Test
+    public void test_DbMessage(){
+        List<MessageDb> actual = new DbMapperGetDisconnectedMessages(db).map(null);
+        Assert.assertEquals(actual.size(),0);
+        MessageDb messageDb = new MessageDb(10,11);
+        new DbMapperAddMessage(db).map(messageDb);
+        actual = new DbMapperGetDisconnectedMessages(db).map(null);
+        Assert.assertEquals(actual.size(),1);
+        new DbMapperDeleteMessage(db).map(messageDb);
+        actual = new DbMapperGetDisconnectedMessages(db).map(null);
+        Assert.assertEquals(actual.size(),0);
+    }
+
+    @Test
+    public void test_questions(){
+        QuestionDb question = new QuestionDb(1,"New question");
+        question.new Answer("text",10);
+        new DbMapperAddQuestion(db).map(question);
+        question = new QuestionDb(1,"Updated");
+        new DbMapperAddQuestion(db).map(question);
+        Assert.assertEquals(question.getId(),1);
+    }
+
+    @Before
+    public void clearTables() {
         System.out.println("clearDb");
         db.clearDatabase();
     }
 
-    @AfterTest
-    void disconnect(){
+    @AfterClass
+    public static void disconnect(){
         System.out.println("disconnect");
+        db.clearDatabase();
         db.disconnect();
     }
 }

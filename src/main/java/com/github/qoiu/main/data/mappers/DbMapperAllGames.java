@@ -1,7 +1,7 @@
 package com.github.qoiu.main.data.mappers;
 
 import com.github.qoiu.main.data.GameObject;
-import com.github.qoiu.main.data.tables.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseBase;
 
 import javax.validation.constraints.Null;
 import java.sql.ResultSet;
@@ -21,11 +21,11 @@ public class DbMapperAllGames extends DbMapper.Base<List<GameObject>, Null> {
         ArrayList<GameObject> list = new ArrayList<>();
         try {
             while (set.next()) {
-                GameObject newGO = new GameObject(set);
+                GameObject newGO = new ResultSetToGameObjectMapper().map(set);
                 list.add(newGO);
             }
-            for (GameObject game: list) {
-                ResultSet userSet = db.executeQuery("SELECT gameId, id, statusGame FROM userInGame WHERE gameId = " + game.getId());
+            for (GameObject game : list) {
+                ResultSet userSet = db.executeQuery("SELECT gameId, id, statusGame, users.name FROM userInGame NATURAL JOIN users WHERE gameId = " + game.getId());
                 while (userSet.next()) {
                     game.addUserInGames(new ResultSetToUserInGameDbMapper().map(userSet));
                 }

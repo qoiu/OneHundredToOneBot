@@ -1,12 +1,12 @@
 package com.github.qoiu.main.data.mappers;
 
 import com.github.qoiu.main.data.UserDb;
-import com.github.qoiu.main.data.tables.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseBase;
 
-public class DbMapperConnectPlayer extends DbMapper.Base<Integer, UserDb> {
+public class DbMapperAddPlayer extends DbMapper.Base<Integer, UserDb> {
 
     private final Integer gameId;
-    public DbMapperConnectPlayer(DatabaseBase db, Integer gameId) {
+    public DbMapperAddPlayer(DatabaseBase db, Integer gameId) {
         super(db);
         this.gameId = gameId;
     }

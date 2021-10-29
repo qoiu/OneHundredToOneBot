@@ -1,6 +1,6 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.tables.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseBase;
 
 public interface DbMapper<Output, Input> {
 
