@@ -1,47 +1,47 @@
-package com.github.qoiu.main;
+package com.github.qoiu.main.data;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Question {
-    private String text;
-    private List<Answer> answers = new ArrayList<>();
+public class QuestionDb {
+    private final int id;
+    private final String text;
+    private List<Answer> answers;
 
-    public Question(String text) {
+    public QuestionDb(int id, String text) {
+        this.id = id;
         this.text = text;
+        answers=new ArrayList<>();
     }
 
+    public void setAnswers(List<Answer> list){
+        this.answers = list;
+    }
+    public void addAnswer(Answer answer){
+        answers.add(answer);
+    }
 
+    public int getId() {
+        return id;
+    }
 
     public String getText() {
         return text;
-    }
-
-    public void addAnswer(Answer answer){
-        answers.add(answer);
     }
 
     public List<Answer> getAnswers() {
         return answers;
     }
 
-    public  class Answer {
+    public class Answer {
         private final String text;
         private final int rate;
-        private boolean answered = false;
+
 
         public Answer(String text, int rate) {
             this.text = text;
             this.rate = rate;
             answers.add(this);
-        }
-
-        public void setAnswered(){
-            answered = true;
-        }
-
-        public boolean isAnswered() {
-            return answered;
         }
 
         public int getRate() {

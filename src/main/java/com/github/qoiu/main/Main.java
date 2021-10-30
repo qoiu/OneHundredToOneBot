@@ -1,7 +1,10 @@
 package com.github.qoiu.main;
 
 import com.github.qoiu.main.bot.Bot;
-import com.github.qoiu.main.data.tables.*;
+import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.QuestionDb;
+import com.github.qoiu.main.data.mappers.DbMapperAddQuestion;
+import com.github.qoiu.main.mappers.QuestionsToQuestionDbMapper;
 import com.github.qoiu.main.presenter.MainPresenter;
 import javafx.application.Application;
 import javafx.event.EventHandler;
@@ -30,6 +33,7 @@ public class Main extends Application {
     }
 
     private static Bot bot;
+    private static DatabaseBase db;
 
     public static void main(String[] args) {
         bot = new Bot(new OutputReader().read());
@@ -39,13 +43,8 @@ public class Main extends Application {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-        DatabaseBase.start();
-        DbGame dbGame = new DbGame();
-        DbUsers dbUser = new DbUsers();
-        DbQuestions dbQuestions = new DbQuestions();
-        addQuestions(dbQuestions);
-        DbMessageHistory dbHistory = new DbMessageHistory();
-        new MainPresenter(bot, dbGame, dbUser, dbHistory, dbQuestions);
+        db = new DatabaseBase("jdbc:sqlite:game.db");
+        new MainPresenter(bot, db);
         launch(args);
     }
 
@@ -56,10 +55,10 @@ public class Main extends Application {
         System.exit(0);
     }
 
-    private static void addQuestions(DbQuestions dbQuestions){
+    private static void addQuestions(QuestionDb dbQuestions){
         List<Question> questions = new InputVocReader("100 к 1 ответы на вопрос:", "end").read();
         for (Question question:questions) {
-            dbQuestions.addQuestion(question);
+            new DbMapperAddQuestion(db).map(new QuestionsToQuestionDbMapper().map(question));
         }
         System.out.println("questions added");
 

@@ -34,14 +34,14 @@ public class DbMapperTest {
     @Test
     public void test_DbMapperGame() {
 
-        GameObject game = new DbMapperGetGameById(db).map(112);
+        GameObject game = new DbMapperGetGameByHostId(db).map(112L);
         Assert.assertEquals(game.getName(),"Error");
 
         UserDb user = new UserDb(112L, 0, "zozo");
         int actualGameId = new DbMapperCreateGameForPlayer(db)
                 .map(user);
 
-        game = new <GameObject, Long>DbMapperGetGameById(db).map(112);
+        game = new <GameObject, Long>DbMapperGetGameByHostId(db).map(112L);
 
         Assert.assertNotNull(game);
         GameObject expected = new GameObject("zozo", 112L, actualGameId);

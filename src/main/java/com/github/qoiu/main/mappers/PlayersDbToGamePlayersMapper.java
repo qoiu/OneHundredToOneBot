@@ -14,6 +14,6 @@ public class PlayersDbToGamePlayersMapper implements Mapper<List<PlayerDb>,List<
         for (PlayerDb player:data) {
             players.add(new PlayerDbToGamePlayerMapper().map(player));
         }
-        return null;
+        return players;
     }
 }

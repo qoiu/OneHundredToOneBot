@@ -1,15 +1,13 @@
 package com.github.qoiu.main.data;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GameObject {
-    private String name;
-    private long hostId;
-    private int id;
-    private List<UserInGame> userInGames = new ArrayList<>();
+    private final String name;
+    private final long hostId;
+    private final int id;
+    private List<PlayerDb> userDbs = new ArrayList<>();
 
     public GameObject(String name, long hostId, int id) {
         this.name = name;
@@ -17,20 +15,13 @@ public class GameObject {
         this.id = id;
     }
 
-    public GameObject(ResultSet set) {
-        try {
-            this.name = set.getString("gameName");
-            this.hostId = set.getLong("hostDialogId");
-            this.id = set.getInt("id");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void addUserInGames(PlayerDb userDb) {
+        userDbs.add(userDb);
     }
 
-    public void addUserInGames(UserInGame userInGame) {
-        userInGames.add(userInGame);
+    public void setUserInGames(List<PlayerDb> userDbs) {
+        this.userDbs = userDbs;
     }
-
 
     public String getName() {
         return name;
@@ -44,7 +35,22 @@ public class GameObject {
         return id;
     }
 
-    public List<UserInGame> getUserInGames() {
-        return userInGames;
+    public List<PlayerDb> getUserInGames() {
+        return userDbs;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj instanceof GameObject)
+            return (((GameObject) obj).id == this.id &&
+                    ((GameObject) obj).name.equals(this.name) &&
+                    ((GameObject) obj).hostId == this.hostId);
+        return false;
     }
 }

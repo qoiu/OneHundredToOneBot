@@ -7,9 +7,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import java.util.ArrayList;
 import java.util.List;
 
-class TelegramBtn {
+public class TelegramBtn {
 
-    private List<List<InlineKeyboardButton>> collums = new ArrayList<>();
+    private final List<List<InlineKeyboardButton>> collumns = new ArrayList<>();
 
     void addRow(Pair<String,String>...btn){
         List<InlineKeyboardButton> buttons = new ArrayList<>();
@@ -20,21 +20,21 @@ class TelegramBtn {
                             .callbackData(button.getValue())
                             .build());
         }
-        collums.add(buttons);
+        collumns.add(buttons);
     }
 
-    void addCollum(String text, String callback){
+    public void addCollumn(String text, String callback){
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         buttons.add(InlineKeyboardButton.builder()
                 .text(text)
                 .callbackData(callback)
                 .build());
-        collums.add(buttons);
+        collumns.add(buttons);
     }
 
-    InlineKeyboardMarkup getBtnGroup(){
+    public InlineKeyboardMarkup getBtnGroup(){
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(collums);
+        markup.setKeyboard(collumns);
         return markup;
     }
 }

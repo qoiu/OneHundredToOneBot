@@ -1,14 +1,39 @@
 package com.github.qoiu.main.bot;
 
-import com.github.qoiu.main.StateStatus;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.github.qoiu.main.StateStatus.*;
 
 public class StateActions {
 
-    public Integer action(long id,int state, BotInterface bot){
-        switch (state){
-            case StateStatus.PLAYER_BASE_STATUS:
-                return StateStatus.PLAYER_WAITING_ACTION;
-        }
-        return StateStatus.PLAYER_BASE_STATUS;
+    private final Map<Integer,Integer> mapMessage = new HashMap<>();
+    private final Map<String,Integer> mapCallback = new HashMap<>();
+
+    public StateActions() {
+        initCallback();
+        initMessages();
+  }
+
+    private void initCallback(){
+        mapCallback.put("/menu",PLAYER_WAITING_ACTION);
+        mapCallback.put("/start",PLAYER_WAITING_OTHER_PLAYERS_HOST);
+        mapCallback.put("/connecting",PLAYER_CHOSE_GAME);
+        mapCallback.put("/connect",PLAYER_WAITING_OTHER_PLAYERS);
+        mapCallback.put("/startGame",PLAYER_IN_GAME);
+        mapCallback.put("/base",PLAYER_BASE_STATUS);//you get it when parse of command throw NumberFormatException
     }
+
+    public void initMessages(){
+        mapMessage.put(PLAYER_BASE_STATUS,PLAYER_WAITING_ACTION);
+    }
+
+    public Integer actionMessage(int state){
+            return mapMessage.containsKey(state)?mapMessage.get(state):PLAYER_BASE_STATUS;
+    }
+
+    public Integer actionCallback(String command){
+        return mapCallback.containsKey(command)?mapCallback.get(command):PLAYER_BASE_STATUS;
+    }
+
 }

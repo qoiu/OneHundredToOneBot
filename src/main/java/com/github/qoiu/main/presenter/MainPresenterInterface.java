@@ -1,15 +1,14 @@
 package com.github.qoiu.main.presenter;
 
-import javafx.util.Pair;
-import org.telegram.telegrambots.meta.api.objects.User;
+import com.github.qoiu.main.bot.BotMessage;
+import com.github.qoiu.main.data.UserMessaged;
 
 import java.util.List;
 
 public interface MainPresenterInterface {
-    List<Pair<Long,Integer>> getDisconnectedMessages();
-    void saveMsg(Pair<Long,Integer> pair);
-    void deletedMsg(Pair<Long,Integer> pair);
-    void receiveMessage(User user, String message);
-    void receiveCallback(User user, String message);
-    void startGame(User user);
+    List<BotMessage> getDisconnectedMessages();
+    void saveMsg(BotMessage msg);
+    void deletedMsg(BotMessage msg);
+    void receiveMessage(UserMessaged userMessaged);
+    void receiveCallback(UserMessaged userMessaged);
 }

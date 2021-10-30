@@ -8,16 +8,30 @@ import java.sql.SQLException;
 public class ResultSetToUserInGameDbMapper implements DbMapper<PlayerDb, ResultSet> {
     @Override
     public PlayerDb map(ResultSet set) {
-
+        long id = 0;
+        long gameId = 0;
+        int statusGame = 0;
+        String name = "";
         try {
-            long id = set.getLong("id");
-            long gameId = set.getLong("gameId");
-            int statusGame = set.getInt("statusGame");
-            String name = set.getString("name");
-            return new PlayerDb(id,gameId,statusGame,name);
+            id = set.getLong("id");
         } catch (SQLException e) {
             e.printStackTrace();
-            return new PlayerDb(0,0,0);
         }
+        try {
+            gameId = set.getLong("gameId");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            statusGame = set.getInt("statusGame");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            name = set.getString("name");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new PlayerDb(id, gameId, statusGame, name);
     }
 }

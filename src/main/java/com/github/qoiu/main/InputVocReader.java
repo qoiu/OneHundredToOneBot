@@ -30,7 +30,7 @@ public class InputVocReader implements Read<List<Question>> {
                     if (question != null) list.add(question);
                     question = new Question(replace(c));
                 } else {
-                    if (question != null && !c.equals("")) question.addAnswer(c, 80 - question.getAnswers().size() * 10);
+                    if (question != null && !c.equals("")) question.new Answer(c, 80 - question.getAnswers().size() * 10);
                 }
             }
             reader.close();

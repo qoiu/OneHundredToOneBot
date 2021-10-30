@@ -14,7 +14,7 @@ public class DbMapperGetQuestion extends DbMapper.Base<QuestionDb, Integer> {
     @Override
     public QuestionDb map(Integer questionId) {
         QuestionDb questionDb = new ResultSetToQuestionDbMapper().map(
-                db.executeQuery("SELECT id, text FROM questions WHERE questions.id = " + questionId));
+                db.executeQuery("SELECT id, text FROM questions WHERE id = " + questionId));
         if (questionDb != null) {
             ResultSet rs = db.executeQuery("SELECT text, rate FROM answers WHERE questionId = " + questionDb.getId() + " LIMIT 6");
            try {

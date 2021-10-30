@@ -10,16 +10,25 @@ public class ResultSetToGameObjectMapper implements DbMapper<GameObject, ResultS
     @Override
     public GameObject map(ResultSet set) {
         GameObject game;
+        String name = "";
+        long hostId = 0;
+        int id = 0;
         try {
-            String name = set.getString("gameName");
-            long hostId = set.getLong("hostDialogId");
-            int id = set.getInt("id");
-
-            game = new GameObject(name,hostId,id);
+            name = set.getString("gameName");
         } catch (SQLException e) {
             e.printStackTrace();
-            game = new GameObject("Error",0,0);
         }
+        try {
+            hostId = set.getLong("hostDialogId");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            id = set.getInt("id");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        game = new GameObject(name, hostId, id);
         return game;
     }
 }
