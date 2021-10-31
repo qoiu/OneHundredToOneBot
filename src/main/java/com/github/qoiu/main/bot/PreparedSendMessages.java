@@ -1,7 +1,6 @@
 package com.github.qoiu.main.bot;
 
 import com.github.qoiu.main.Question;
-import com.github.qoiu.main.data.GameObject;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 public class PreparedSendMessages {
@@ -27,7 +26,7 @@ public class PreparedSendMessages {
 
     SendMessage isAlive(String id) {
         TelegramBtn btn = new TelegramBtn();
-        btn.addCollumn("Hello", "/menu");
+        btn.addColumn("Hello", "/menu");
         return base(id, "Bot is ready!\nWaiting for your commands",btn);
     }
 
@@ -47,40 +46,13 @@ public class PreparedSendMessages {
         return base(id, "Ожидание начала игры...");
     }
 
-    SendMessage hostWaitingPlayers(long id, GameObject game) {
-        TelegramBtn btn = new TelegramBtn();
-        StringBuilder players = new StringBuilder("Статус игроков: \n");
-        // TODO: 30.10.2021 Add remove players
-//        for (PlayerDb user : game.getUserInGames()) {
-//            if(game.getHostId()!=user.getId())
-//                btn.addCollum("Исключить: "+user.getName(),"/remove:"+user.getId());
-//            players
-//                    .append(user.getName())
-//                    .append(": ")
-//                    .append(user.getStatus().toLowerCase())
-//                    .append("\n");
-//        }
-        btn.addCollumn("Начать игру", "/startGame");
-        return base(String.valueOf(id), "Вы готовы начать.\n"+ players,btn);
-    }
-
-    public SendMessage playerAnswer(String topText, long playerId, Question question,int timer){
+    public SendMessage playerAnswer(String topText, long playerId, Question question){
         TelegramBtn btn = new TelegramBtn();
         for (Question.Answer answer : question.getAnswers()){
-            String text = (answer.isAnswered())?answer.getText():"***";
-            btn.addCollumn(text, " ");
-
+            String text = (answer.isAnswered())?answer.getText()+" "+question.getPercentageOfAnswer(answer)+"%":"***";
+            btn.addColumn(text, " ");
         }
-        return base(String.valueOf(playerId), topText+"\n"+question.getText() + "\n"+ "Осталось: "+timer+" сек.",btn);
+        return base(String.valueOf(playerId), topText+"\n"+question.getText() + "\n",btn);
     }
 
-    public SendMessage playerActivePlayerAnswer(long playerId, Question question,int timer){
-        TelegramBtn btn = new TelegramBtn();
-        for (Question.Answer answer : question.getAnswers()){
-            String text = (answer.isAnswered())?answer.getText():"***";
-            btn.addCollumn(text, "");
-
-        }
-        return base(String.valueOf(playerId), "Вы отвечаете на вопрос:\n"+question + "\n"+ "Осталось: "+timer+" сек.",btn);
-    }
 }

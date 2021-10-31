@@ -20,13 +20,13 @@ public class SendMapperListOfGames extends SendMapper.Base{
         TelegramBtn btn = new TelegramBtn();
         if(games.size()>0){
             for (GameObject game:games) {
-                btn.addCollumn(game.getName(),"/connect:"+game.getId());
+                btn.addColumn(game.getName(),"/connect:"+game.getId());
             }
-            btn.addCollumn("Меню","/menu");
+            btn.addColumn("Меню","/menu");
             return base(userMessaged.getId(), "Список игр:",btn);
         }else {
-            btn.addCollumn("Новая игра", "/start");
-            btn.addCollumn("Меню","/menu");
+            btn.addColumn("Новая игра", "/start");
+            btn.addColumn("Меню","/menu");
             return base(userMessaged.getId(), "Нет начатых игр. \nБудьте первым!",btn);
         }
     }

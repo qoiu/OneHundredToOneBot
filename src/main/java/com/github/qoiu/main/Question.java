@@ -11,7 +11,14 @@ public class Question {
         this.text = text;
     }
 
-
+    public int getPercentageOfAnswer(Question.Answer answer){
+        double amount=0D;
+        for (Question.Answer answ:answers) {
+            amount+=answ.rate;
+        }
+        amount=answer.rate/amount*100;
+        return (int) amount;
+    }
 
     public String getText() {
         return text;

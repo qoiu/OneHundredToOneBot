@@ -13,7 +13,13 @@ public class UserMessaged {
         this.message = message;
     }
 
-     public String getName() {
+    public UserMessaged(Long id, String message) {
+        this.name="";
+        this.id = id;
+        this.message = message;
+    }
+
+    public String getName() {
          return name;
      }
 

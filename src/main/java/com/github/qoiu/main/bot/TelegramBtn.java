@@ -9,7 +9,7 @@ import java.util.List;
 
 public class TelegramBtn {
 
-    private final List<List<InlineKeyboardButton>> collumns = new ArrayList<>();
+    private final List<List<InlineKeyboardButton>> columns = new ArrayList<>();
 
     void addRow(Pair<String,String>...btn){
         List<InlineKeyboardButton> buttons = new ArrayList<>();
@@ -20,21 +20,21 @@ public class TelegramBtn {
                             .callbackData(button.getValue())
                             .build());
         }
-        collumns.add(buttons);
+        columns.add(buttons);
     }
 
-    public void addCollumn(String text, String callback){
+    public void addColumn(String text, String callback){
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         buttons.add(InlineKeyboardButton.builder()
                 .text(text)
                 .callbackData(callback)
                 .build());
-        collumns.add(buttons);
+        columns.add(buttons);
     }
 
     public InlineKeyboardMarkup getBtnGroup(){
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(collumns);
+        markup.setKeyboard(columns);
         return markup;
     }
 }

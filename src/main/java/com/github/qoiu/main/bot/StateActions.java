@@ -28,11 +28,8 @@ public class StateActions {
         mapMessage.put(PLAYER_BASE_STATUS,PLAYER_WAITING_ACTION);
     }
 
-    public Integer actionMessage(int state){
-            return mapMessage.containsKey(state)?mapMessage.get(state):PLAYER_BASE_STATUS;
-    }
-
     public Integer actionCallback(String command){
+        command=command.split(":")[0];
         return mapCallback.containsKey(command)?mapCallback.get(command):PLAYER_BASE_STATUS;
     }
 

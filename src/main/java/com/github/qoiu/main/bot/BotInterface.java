@@ -9,4 +9,8 @@ public interface BotInterface {
     void sendMessage(SendMessage message);
 
     void startGame(long id);
+
+    void sendChatMessage(BotChatMessage chatMessage);
+
+    void clearChat(long  id);
 }

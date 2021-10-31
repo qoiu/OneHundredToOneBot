@@ -1,20 +1,20 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.GameObject;
 import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.GameObject;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class DbMapperGetGameByHostId extends DbMapper.Base<GameObject, Long> {
+public class DbMapperGetGameByGameId extends DbMapper.Base<GameObject, Integer> {
 
-    public DbMapperGetGameByHostId(DatabaseBase db) {
+    public DbMapperGetGameByGameId(DatabaseBase db) {
         super(db);
     }
 
     @Override
-    public GameObject map(Long id) {
-        ResultSet set = db.executeQuery("SELECT gameName,hostDialogId,id FROM game WHERE hostDialogId = " + id);
+    public GameObject map(Integer id) {
+        ResultSet set = db.executeQuery("SELECT gameName,hostDialogId,id FROM game WHERE id = " + id);
         GameObject game = new ResultSetToGameObjectMapper().map(set);
         try {
             ResultSet userSet = db.executeQuery("SELECT gameId, id, statusGame,users.name FROM userInGame NATURAL JOIN users WHERE gameId = " + game.getId());
@@ -23,7 +23,6 @@ public class DbMapperGetGameByHostId extends DbMapper.Base<GameObject, Long> {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
         }
         return game;
     }

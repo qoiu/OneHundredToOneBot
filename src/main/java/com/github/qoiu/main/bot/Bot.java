@@ -17,6 +17,7 @@ import java.util.*;
 public class Bot extends TelegramLongPollingBot implements BotInterface {
 
     private final HashMap<String, Message> savedMessage = new HashMap<>();
+    private BotChatForPlayer chat;
     private final Set<Long> users = new HashSet<>();
     private final List<Message> history = new LinkedList<>();
     private MainPresenterInterface presenter;
@@ -25,6 +26,7 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
     public Bot(String token) {
         this(new DefaultBotOptions());
         this.token = token;
+        chat = new BotChatForPlayer();
     }
 
     private Bot(DefaultBotOptions options) {
@@ -81,7 +83,6 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
-            resendMail(update.getMessage());
             Message message = update.getMessage();
             User user = message.getFrom();
             users.add(user.getId());
@@ -113,19 +114,24 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
             }
     }
 
-    public void resendMail(Message message) {
-     String name = message.getFrom().getFirstName();
-        if(message.getFrom().getLastName() != null) name += " " + message.getFrom().getLastName();
-        String text ="*" + name + "* : \n" + message.getText();
-        SendMessage msg = SendMessage.builder()
+    public void sendChatMessage(BotChatMessage chatMessage) {
+        String msg ="*" + chatMessage.getFrom() + "* : \n" + chatMessage.getText();
+        SendMessage message = SendMessage.builder()
                 .parseMode("MarkdownV2")
-                .text(text)
-                .chatId(message.getChat().getId().toString())
+                .text(msg)
+                .chatId(String.valueOf(chatMessage.getTo()))
                 .build();
         try {
-            execute(msg);
+            chat.addMessage(execute(message));
         } catch (TelegramApiException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void clearChat(long  id) {
+        for (Message message:chat.getPlayerMessages(id)) {
+            deleteMsg(message);
         }
     }
 
