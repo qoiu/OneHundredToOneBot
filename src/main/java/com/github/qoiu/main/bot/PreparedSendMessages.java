@@ -48,6 +48,7 @@ public class PreparedSendMessages {
 
     public SendMessage playerAnswer(String topText, long playerId, Question question){
         TelegramBtn btn = new TelegramBtn();
+        btn.addColumn("Выйти в меню","/leave");
         for (Question.Answer answer : question.getAnswers()){
             String text = (answer.isAnswered())?answer.getText()+" "+question.getPercentageOfAnswer(answer)+"%":"***";
             btn.addColumn(text, " ");

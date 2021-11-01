@@ -10,15 +10,27 @@ public class BotChatForPlayer {
     private final HashMap<String, List<Message>> savedChatMessage = new HashMap<>();
 
     void addMessage(Message message) {
-        String id = message.getFrom().getId().toString();
-        if (savedChatMessage.containsKey(id))
+        addMessage(message,message.getFrom().getId());
+    }
+
+    void addMessage(Message message,long playerId) {
+        String id = String.valueOf(playerId);
+        if (!savedChatMessage.containsKey(id))
             savedChatMessage.put(id, new ArrayList<Message>());
         savedChatMessage.get(id).add(message);
     }
 
     List<Message> getPlayerMessages(long id) {
-        if (savedChatMessage.containsKey(String.valueOf(id)))
+        if (savedChatMessage.containsKey(String.valueOf(id))){
             return savedChatMessage.get(String.valueOf(id));
+        }
         return new ArrayList<>();
+    }
+
+    void clearChat(long id){
+        if (savedChatMessage.containsKey(String.valueOf(id))){
+            savedChatMessage.get(String.valueOf(id)).clear();
+        }
+
     }
 }

@@ -4,11 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Question {
+    private int id;
     private String text;
     private List<Answer> answers = new ArrayList<>();
 
+    public Question(String text,int id) {
+        this.text = text;
+        this.id = id;
+    }
+
     public Question(String text) {
         this.text = text;
+        this.id = 0;
     }
 
     public int getPercentageOfAnswer(Question.Answer answer){
@@ -24,6 +31,11 @@ public class Question {
         return text;
     }
 
+    public int getId() {
+        return id;
+    }
+
+
     public void addAnswer(Answer answer){
         answers.add(answer);
     }
@@ -34,7 +46,7 @@ public class Question {
 
     public  class Answer {
         private final String text;
-        private final int rate;
+        private int rate;
         private boolean answered = false;
 
         public Answer(String text, int rate) {
@@ -57,6 +69,10 @@ public class Question {
 
         public String getText() {
             return text;
+        }
+
+        public void upgradeRate() {
+            rate+=1;
         }
     }
 }

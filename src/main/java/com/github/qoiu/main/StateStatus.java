@@ -14,4 +14,7 @@ public class StateStatus {
     public static final int USER_IS_READY=1;
     public static final int USER_IN_GAME=2;
 
+    public static final int GAME_NOT_STARTED = 0;
+    public static final int GAME_STARTED = 1;
+
 }

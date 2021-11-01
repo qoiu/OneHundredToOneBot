@@ -46,8 +46,9 @@ public class UserDb {
         return extra;
     }
 
-    public void setExtra(Object extra) {
+    public UserDb setExtra(Object extra) {
         this.extra = extra;
+        return this;
     }
 
     @Override

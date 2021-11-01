@@ -11,9 +11,11 @@ public interface SendMapper{
 
     abstract class Base implements SendMapper{
         protected DatabaseBase db;
+        protected TelegramBtn btn;
 
         public Base(DatabaseBase db) {
             this.db = db;
+            btn = new TelegramBtn();
         }
 
         protected SendMessage base(long id, String text) {

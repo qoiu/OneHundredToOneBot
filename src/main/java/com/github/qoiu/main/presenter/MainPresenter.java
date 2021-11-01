@@ -71,6 +71,36 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         }
     }
 
+    @Override
+    public void receiveCallback(UserMessaged userMessaged) {
+        int status = stateActions.actionCallback(userMessaged.getMessage());
+        new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
+        if (status != PLAYER_IN_GAME) {
+            if (games.containsKey(userMessaged.getId())&& games.get(userMessaged.getId())!=null) {
+                games.get(userMessaged.getId()).playerLeaveGame(userMessaged);
+                games.put(userMessaged.getId(),null);
+            }
+            SendMessage sendMessage = null;
+            if (messageMap.containsKey(status))
+                sendMessage = messageMap.get(status).map(userMessaged);
+            if(sendMessage!=null)sendMessage(sendMessage);
+            new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
+        } else {
+            if (!games.containsKey(userMessaged.getId())|| games.get(userMessaged.getId())==null) {
+                GameObject game =
+                        new DbMapperGetGameByHostId(db).map(userMessaged.getId());
+                List<GamePlayer> playerList= new PlayersDbToGamePlayersMapper().map(game.getUserInGames());
+                GamePresenter gamePresenter;
+                gamePresenter =  new GamePresenter(db, playerList,this);
+                for (GamePlayer player:playerList) {
+                    games.put(userMessaged.getId(),gamePresenter);
+                }
+            } else {
+                // TODO: 30.10.2021 actions for  other players
+            }
+        }
+    }
+
     public void notifyGamePlayersChanged(int gameId) {
         GameObject game = new DbMapperGetGameByGameId(db).map(gameId);
 
@@ -101,29 +131,6 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         UserDb userDb = new DbMapperGetUserById(db).map(userMessaged.getId());
         if (userDb.getName().equals(""))
             new DbMapperAddUser(db).map(new UserMessagedToUserDb(0).map(userMessaged));
-    }
-
-    @Override
-    public void receiveCallback(UserMessaged userMessaged) {
-        int status = stateActions.actionCallback(userMessaged.getMessage());
-        new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
-        SendMessage sendMessage = null;
-        if (status != PLAYER_IN_GAME) {
-            if (messageMap.containsKey(status))
-                sendMessage = messageMap.get(status).map(userMessaged);
-            if(sendMessage!=null)sendMessage(sendMessage);
-            new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
-        } else {
-            if (!games.containsKey(userMessaged.getId())) {
-                GameObject game =
-                        new DbMapperGetGameByHostId(db).map(userMessaged.getId());
-                games.put(userMessaged.getId(), new GamePresenter(db,
-                        new PlayersDbToGamePlayersMapper().map(game.getUserInGames()),
-                        this));
-            } else {
-                // TODO: 30.10.2021 actions for  other players
-            }
-        }
     }
 
     @Override

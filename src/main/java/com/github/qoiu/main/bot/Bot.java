@@ -40,6 +40,7 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
         }
         PreparedSendMessages messages = new PreparedSendMessages();
         for (Long user : users) {
+            clearChat(user);
             try {
                 Message sent = execute(messages.botDown(String.valueOf(user)));
                 presenter.saveMsg(new BotMessage(sent.getChatId(), sent.getMessageId()));
@@ -91,7 +92,7 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
             deleteMsg(message);
         } else if (update.hasCallbackQuery()) {
             CallbackQuery query = update.getCallbackQuery();
-            if (query.getData() != null) {
+            if (query.getData() != null && query.getData().startsWith("/")) {
                 users.add(update.getCallbackQuery().getFrom().getId());
                 presenter.receiveCallback(new BotUserToUserMessagedMapper.Base().map(query.getFrom(), query.getData()));
             }
@@ -122,7 +123,9 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
                 .chatId(String.valueOf(chatMessage.getTo()))
                 .build();
         try {
-            chat.addMessage(execute(message));
+            Message sent =  execute(message);
+            history.add(sent);
+            chat.addMessage(sent,chatMessage.getTo());
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -133,6 +136,7 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
         for (Message message:chat.getPlayerMessages(id)) {
             deleteMsg(message);
         }
+        chat.clearChat(id);
     }
 
 

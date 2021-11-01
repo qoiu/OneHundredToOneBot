@@ -7,7 +7,7 @@ import com.github.qoiu.main.data.QuestionDb;
 public class QuestionDbToQuestionMapper implements Mapper<QuestionDb, Question> {
     @Override
     public Question map(QuestionDb data) {
-        Question question = new Question(data.getText());
+        Question question = new Question(data.getText(),data.getId());
         for (QuestionDb.Answer answer:data.getAnswers()) {
             new AnswerDbToAnswerMapper(question).map(answer);
         }

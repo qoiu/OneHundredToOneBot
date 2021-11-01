@@ -1,58 +1,84 @@
 package com.github.qoiu.main.presenter;
 
 import com.github.qoiu.main.Question;
+import com.github.qoiu.main.StateStatus;
 import com.github.qoiu.main.bot.BotChatMessage;
 import com.github.qoiu.main.bot.PreparedSendMessages;
 import com.github.qoiu.main.data.DatabaseBase;
 import com.github.qoiu.main.data.UserMessaged;
-import com.github.qoiu.main.data.mappers.DbMapperGetQuestion;
-import com.github.qoiu.main.data.mappers.DbMapperGetUnansweredQuestionsByPlayers;
+import com.github.qoiu.main.data.mappers.*;
+import com.github.qoiu.main.mappers.GamePlayerToUserDbMapper;
 import com.github.qoiu.main.mappers.QuestionDbToQuestionMapper;
+import com.github.qoiu.main.mappers.UserMessagedToGamePlayer;
+import com.github.qoiu.main.presenter.mappers.SendMapperLeaveGame;
 import com.github.qoiu.main.presenter.mappers.SendMapperSimpleText;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.*;
 
 public class GamePresenter {
-    private final int MIN_SAME_SYMBOL_CHECK=3;
+    private final int MIN_SAME_SYMBOL_CHECK = 3;
     private final List<GamePlayer> list;
     private final DatabaseBase db;
     private Round current;
     private final MessageSender sender;
-    private final PreparedSendMessages messages = new PreparedSendMessages();
-    private final Map<Long,Integer> gameScores;
+    private final PreparedSendMessages messages;
+    private final Map<Long, Integer> gameScores;
 
     public GamePresenter(DatabaseBase db, List<GamePlayer> list, MessageSender sender) {
         this.db = db;
         this.sender = sender;
         this.list = list;
         gameScores = new HashMap<>();
-        for (GamePlayer player:list) {
-            gameScores.put(player.getId(),0);
+        messages= new PreparedSendMessages();
+        for (GamePlayer player : list) {
+            new DbMapperUpdateUser(db).map(new GamePlayerToUserDbMapper(StateStatus.PLAYER_IN_GAME).map(player));
+            gameScores.put(player.getId(), 0);
         }
         startNewRound();
     }
 
-    void startNewRound(){
+    void startNewRound() {
+        if (current != null) current.clear();
         current = new Round();
         current.start();
     }
 
+
+    private void sendAll(String text) {
+        SendMessage msg;
+        for (GamePlayer player : list) {
+            msg = new SendMapperSimpleText().map(new UserMessaged(player.getId(), text));
+            sender.sendMessage(msg);
+        }
+    }
+
+    private void sendChatMsgToAll(String from, String text) {
+        for (GamePlayer player : list) {
+            sender.sendChatMessage(new BotChatMessage(from, text, player.getId()));
+        }
+    }
+
     void getChatMessage(UserMessaged userMessaged) {
         String text = userMessaged.getMessage();
+        if (text.equals("/leave")) {
+            new SendMapperLeaveGame(db, new UserMessagedToGamePlayer().map(userMessaged));
+            playerLeaveGame(userMessaged);
+        }
         if (userMessaged.getId() == current.activePlayer.getId())
             if (userMessaged.getMessage().charAt(0) != '?') {
-                current.checkAnswer(userMessaged.getMessage());
+                current.checkAnswer(userMessaged.getMessage().substring(1));
                 return;
             }
         // TODO: 30.10.2021 test me
-        for (GamePlayer player : list) {
-            sender.sendChatMessage(new BotChatMessage(
-                    userMessaged.getName(),
-                    text,
-                    player.getId()
-            ));
-        }
+        sendChatMsgToAll(userMessaged.getName(), text);
+    }
+
+    public void playerLeaveGame(UserMessaged userMessaged) {
+        System.out.println("list: " + list.size());
+        list.remove(new UserMessagedToGamePlayer().map(userMessaged));
+        System.out.println("list after: " + list.size());
+        if(list.size()==0)current.clear();
     }
 
     private class Round {
@@ -60,7 +86,7 @@ public class GamePresenter {
         List<GamePlayer> playersSet = new ArrayList<>();
         private final Question currentQuestion;
         private final Statistic statistic;
-        private Set<Long> ids;
+        private final Set<Long> ids;
 
         public Round() {
             ids = new HashSet<>();
@@ -86,12 +112,14 @@ public class GamePresenter {
             SendMessage msg;
             String before = current.getStatistic().getPlayersStatistic();
             for (GamePlayer player : list) {
-                msg = messages.playerAnswer(
-                        before + ((player != activePlayer) ? activePlayer.getName() + " отвечает на вопрос:" : "Вы отвечаете на вопрос:"),
-                        player.getId(),
-                        currentQuestion
-                );
-                sender.sendMessage(msg);
+                if(activePlayer!=null) {
+                    msg = messages.playerAnswer(
+                            before + ((player != activePlayer) ? activePlayer.getName() + " отвечает на вопрос:" : "Вы отвечаете на вопрос:"),
+                            player.getId(),
+                            currentQuestion
+                    );
+                    sender.sendMessage(msg);
+                }
             }
         }
 
@@ -99,68 +127,74 @@ public class GamePresenter {
             Question.Answer trueAnswer = null;
             for (Question.Answer correctAnswer : currentQuestion.getAnswers()) {
                 if (!correctAnswer.isAnswered())
-                    if (compareStrings(answer, correctAnswer.getText()))
+                    if (compareStrings(answer, correctAnswer.getText())) {
                         trueAnswer = correctAnswer;
+                        int cScore = gameScores.get(activePlayer.getId()) + currentQuestion.getPercentageOfAnswer(trueAnswer);
+                        gameScores.put(activePlayer.getId(), cScore);
+                        trueAnswer.upgradeRate();
+                        new DbMapperUpdateQuestionAnswerRate(db, currentQuestion.getId()).map(trueAnswer);
+                    }
             }
             if (trueAnswer == null) {
-                sendAll(activePlayer.getName() + " *отвечает* '" + answer + "'", "К сожалению, это не популярный ответ");
+                sendChatMsgToAll(activePlayer.getName() + " *отвечает* '" + answer + "'", "К сожалению, это не популярный ответ");
                 statistic.decreaseTry(activePlayer);
+                playersSet.remove(activePlayer);
+                checkRoundEnd();
             } else {
                 trueAnswer.setAnswered();
-                gameScores.put(activePlayer.getId(),currentQuestion.getPercentageOfAnswer(trueAnswer));
-                sendAll(activePlayer.getName() + " *отвечает* '" + answer + "'", "Также ответили " + currentQuestion.getPercentageOfAnswer(trueAnswer) + "%");
-            }
-            updateQuestionForPlayers();
-            checkRoundEnd();
-        }
-
-        private void selectPlayer(){
-            if(playersSet.size()==0){
-                for (GamePlayer player:list) {
-                    if(statistic.tryAmount.get(player)!=0)playersSet.add(player);
+                sendChatMsgToAll(activePlayer.getName() + " *отвечает* '" + answer + "'", "Также ответили " + currentQuestion.getPercentageOfAnswer(trueAnswer) + "%");
+                if (checkAnsweredQuestions()) {
+                    checkRoundEnd();
                 }
             }
-            int rand = new Random().nextInt(playersSet.size());
-            activePlayer= playersSet.get(rand);
             updateQuestionForPlayers();
         }
 
-        private void checkRoundEnd(){
-            if(checkTryAmount() || checkAnsweredQuestions()){
+        private void selectPlayer() {
+            if (playersSet.size() == 0) {
+                for (GamePlayer player : list) {
+                    if (statistic.tryAmount.get(player) != 0) playersSet.add(player);
+                }
+            }
+            activePlayer = playersSet.get(0);
+            if(activePlayer!=null)updateQuestionForPlayers();
+        }
+
+        private void checkRoundEnd() {
+            if (checkTryAmount() || checkAnsweredQuestions()) {
                 //round end
+                for (GamePlayer player : list) {
+                    new DbMapperAddUserAnswer(db).map(new GamePlayerToUserDbMapper(5).map(player).setExtra(currentQuestion.getId()));
+                }
                 startNewRound();
-            }else {
+            } else {
                 //next try
                 selectPlayer();
             }
         }
 
+        void clear() {
+            activePlayer = null;
+            playersSet = null;
+        }
+
         private boolean checkAnsweredQuestions() {
-            for (Question.Answer answer:currentQuestion.getAnswers()) {
-                if(!answer.isAnswered())return false;
+            for (Question.Answer answer : currentQuestion.getAnswers()) {
+                if (!answer.isAnswered()) return false;
             }
             return true;
         }
 
         private boolean checkTryAmount() {
-            for (GamePlayer player:list) {
-                if(statistic.tryAmount.get(player)!=0)return false;
+            for (GamePlayer player : list) {
+                if (statistic.tryAmount.get(player) != 0) return false;
             }
             return true;
         }
 
-        private void sendAll(String from, String text) {
-            SendMessage msg;
-            for (GamePlayer player : list) {
-                msg = new SendMapperSimpleText().map(new UserMessaged(player.getId(), text));
-                sender.sendMessage(msg);
-                sender.sendChatMessage(new BotChatMessage(from, text, player.getId()));
-            }
-        }
-
         private boolean compareStrings(String actual, String expected) {
-            actual = actual.trim().toLowerCase();
-            expected = expected.trim().toLowerCase();
+            actual = actual.trim().toLowerCase().replace("ё","е");
+            expected = expected.trim().toLowerCase().replace("ё","е");
             if (actual.contains(expected) && actual.length() >= MIN_SAME_SYMBOL_CHECK)
                 return true;
             if (expected.contains(actual) && actual.length() >= MIN_SAME_SYMBOL_CHECK)
@@ -193,41 +227,53 @@ public class GamePresenter {
         }
 
         public void start() {
-            for (int i = 3; i >0 ; i--) {
-                clearChatForAll();
+            sendAll(getScoreboard() + "\nОжидание других игроков...");
+            try {
+                Thread.sleep(400);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            for (int i = 3; i > 0; i--) {
+                sendChatMsgToAll("Игра начнётся через", String.valueOf(i));
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(600);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                sendAll("Игра начнётся через:", String.valueOf(i));
             }
             clearChatForAll();
             selectPlayer();
-//            updateQuestionForPlayers();
         }
 
-        private void clearChatForAll(){
-            for (GamePlayer player:list) {
+        private void clearChatForAll() {
+            for (GamePlayer player : list) {
                 sender.clearChat(player.getId());
             }
         }
     }
 
-    class Statistic{
-        Map<GamePlayer,Integer> tryAmount;
+    String getScoreboard() {
+        StringBuilder result = new StringBuilder();
+        for (GamePlayer player : list) {
+            result.append(player.getName()).append(" : ").append(gameScores.get(player.getId())).append("\n");
+        }
+        return result.toString();
+    }
+
+    class Statistic {
+        Map<GamePlayer, Integer> tryAmount;
         private final int MAX_TRY = 3;
 
         public Statistic(List<GamePlayer> players) {
             this.tryAmount = new HashMap<>();
-            for (GamePlayer player:players) {
-                tryAmount.put(player,MAX_TRY);
+            for (GamePlayer player : players) {
+                tryAmount.put(player, MAX_TRY);
             }
         }
 
-        String getPlayersStatistic(){
-            StringBuilder output= new StringBuilder();
-            for (GamePlayer player:tryAmount.keySet()) {
+        String getPlayersStatistic() {
+            StringBuilder output = new StringBuilder();
+            for (GamePlayer player : tryAmount.keySet()) {
                 output.append(player.getName()).append("\n");
                 for (int i = 0; i < MAX_TRY; i++) {
                     output.append((tryAmount.get(player) > i) ? "✔" : "❌");
@@ -238,7 +284,7 @@ public class GamePresenter {
         }
 
         public void decreaseTry(GamePlayer activePlayer) {
-            tryAmount.put(activePlayer,tryAmount.get(activePlayer)-1);
+            tryAmount.put(activePlayer, tryAmount.get(activePlayer) - 1);
         }
     }
 

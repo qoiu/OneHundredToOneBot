@@ -11,7 +11,6 @@ public class SendMapperSimpleText extends SendMapper.Base {
 
     @Override
     public SendMessage map(UserMessaged userMessaged) {
-        TelegramBtn btn = new TelegramBtn();
         return base(userMessaged.getId(),
                 userMessaged.getMessage());
     }

@@ -1,5 +1,7 @@
 package com.github.qoiu.main.presenter;
 
+import java.util.Objects;
+
 public class GamePlayer {
     private long id;
     private String name;
@@ -21,5 +23,18 @@ public class GamePlayer {
 
     public int getStatus() {
         return status;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GamePlayer that = (GamePlayer) o;
+        return id == that.id && Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
     }
 }
