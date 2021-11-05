@@ -1,12 +1,16 @@
 package com.github.qoiu.main.data.mappers;
 
 import com.github.qoiu.main.data.QuestionDb;
-import com.github.qoiu.main.data.UserDb;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ResultSetToQuestionDbMapper implements DbMapper<QuestionDb, ResultSet> {
+public class ResultSetToQuestionDbMapper extends DbMapper.Result<QuestionDb, ResultSet> {
+
+    public ResultSetToQuestionDbMapper(String sql) {
+        super(sql);
+    }
+
     @Override
     public QuestionDb map(ResultSet set) {
 
@@ -15,8 +19,7 @@ public class ResultSetToQuestionDbMapper implements DbMapper<QuestionDb, ResultS
             String text = set.getString("text");
             return new QuestionDb(id,text);
         } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
+            return exception(e);
         }
     }
 }

@@ -1,11 +1,11 @@
 package com.github.qoiu.main.bot;
 
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 public class MyComparator {
 
     @Test
-    void compare(){
+    public void compare(){
         boolean c = comparator( "молитва ","молитва");
         System.out.println(" - " + c);
     }

@@ -10,10 +10,12 @@ public class DbMapperAddQuestion extends DbMapper.Base<Integer, QuestionDb> {
 
     @Override
     public Integer map(QuestionDb question) {
-        int id = db.executeUpdate("INSERT INTO questions (id,text) VALUES(?,?) ON CONFLICT(id) DO UPDATE SET text=?",question.getId(),question.getText(),question.getText());
+        new DbMapperDeleteQuestionWithText(db).map(question.getId());
+        String sql = "INSERT INTO questions (id,text) VALUES(?,?)";
+       int id = db.executeUpdate(sql,question.getId(),question.getText());
+        db.executeUpdate("DELETE FROM answers WHERE questionId = ?",id);
         for (QuestionDb.Answer answer:question.getAnswers()) {
-            db.execute("DELETE FROM answers WHERE questionId = ?",id);
-            db.executeUpdate("INSERT INTO answers (questionId,text,rate) VALUES(?,?)",question.getId(),answer.getText(),answer.getRate());
+            db.executeUpdate("INSERT INTO answers (questionId,text,rate) VALUES(?,?,?)",id,answer.getText(),answer.getRate());
         }
         return id;
     }

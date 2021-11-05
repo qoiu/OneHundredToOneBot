@@ -24,30 +24,12 @@ public class DatabaseBase {
 
     public ResultSet executeQuery(String sql) {
         try {
-//            PreparedStatement statement = statementWithArgs(sql, args);
-            //            statement.close();
-//            return createStatement().executeQuery(sql);
             return statement.executeQuery(sql);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
     }
-
-    public String getString(String sql) {
-//            PreparedStatement statement = statementWithArgs(sql, args);
-            //            statement.close();
-//            return createStatement().executeQuery(sql);
-
-        try {
-            ResultSet set = connection.prepareStatement(sql).executeQuery();
-            return set.getString("name");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-            return "";
-    }
-
 
     public int executeUpdate(String sql, Object... args) {
         try {
@@ -63,13 +45,6 @@ public class DatabaseBase {
             e.printStackTrace();
         }
         return 0;
-    }
-
-    private Statement createStatement() throws SQLException {
-        return connection.createStatement(
-                ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_READ_ONLY);
-
     }
 
     private PreparedStatement statementWithArgs(String sql, Object... args) throws SQLException {
@@ -111,7 +86,6 @@ public class DatabaseBase {
         clearTable("game");
         clearTable("users");
         clearTable("lostMessages");
-//        clearTable("questions");
     }
 
     private void clearTable(String str) {

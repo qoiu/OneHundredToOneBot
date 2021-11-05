@@ -1,6 +1,5 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.Question;
 import com.github.qoiu.main.data.DatabaseBase;
 
 import java.sql.ResultSet;

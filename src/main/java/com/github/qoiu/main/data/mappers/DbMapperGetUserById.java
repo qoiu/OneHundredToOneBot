@@ -12,7 +12,8 @@ public class DbMapperGetUserById extends DbMapper.Base<UserDb,Long>{
 
     @Override
     public UserDb map(Long id) {
-        ResultSet set = db.executeQuery("SELECT name, id, state FROM users WHERE id = "+id);
-        return new ResultSetToUserDbMapper().map(set);
+        String sql = "SELECT name, id, state FROM users WHERE id = " + id;
+        ResultSet set = db.executeQuery(sql);
+        return new ResultSetToUserDbMapper(sql).map(set);
     }
 }

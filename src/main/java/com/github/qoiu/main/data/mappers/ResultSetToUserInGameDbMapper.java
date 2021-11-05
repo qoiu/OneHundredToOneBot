@@ -5,33 +5,22 @@ import com.github.qoiu.main.data.PlayerDb;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ResultSetToUserInGameDbMapper implements DbMapper<PlayerDb, ResultSet> {
+public class ResultSetToUserInGameDbMapper extends DbMapper.Result<PlayerDb, ResultSet> {
+
+    public ResultSetToUserInGameDbMapper(String sql) {
+        super(sql);
+    }
+
     @Override
-    public PlayerDb map(ResultSet set) {
-        long id = 0;
-        long gameId = 0;
-        int statusGame = 0;
-        String name = "";
+    public PlayerDb map(java.sql.ResultSet set) {
         try {
-            id = set.getLong("id");
+            long id = set.getLong("id");
+            long gameId = set.getLong("gameId");
+            int statusGame = set.getInt("statusGame");
+            String name = set.getString("name");
+            return new PlayerDb(id, gameId, statusGame, name);
         } catch (SQLException e) {
-            e.printStackTrace();
+            return exception(e);
         }
-        try {
-            gameId = set.getLong("gameId");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        try {
-            statusGame = set.getInt("statusGame");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        try {
-            name = set.getString("name");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return new PlayerDb(id, gameId, statusGame, name);
     }
 }

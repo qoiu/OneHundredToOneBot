@@ -5,7 +5,7 @@ import com.github.qoiu.main.data.DatabaseBase;
 import com.github.qoiu.main.data.GameObject;
 import com.github.qoiu.main.data.PlayerDb;
 import com.github.qoiu.main.data.UserMessaged;
-import com.github.qoiu.main.data.mappers.DbMapperGameByPlayerId;
+import com.github.qoiu.main.data.mappers.DbMapperGameIdByPlayerId;
 import com.github.qoiu.main.data.mappers.DbMapperGetGameByGameId;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
@@ -16,7 +16,7 @@ public class SendMapperWaitingForPlayersClient extends SendMapper.Base {
 
     @Override
     public SendMessage map(UserMessaged userMessaged) {
-        int gameId =new DbMapperGameByPlayerId(db).map(userMessaged.getId());
+        int gameId =new DbMapperGameIdByPlayerId(db).map(userMessaged.getId());
         GameObject game = new DbMapperGetGameByGameId(db).map(gameId);
         StringBuilder players = new StringBuilder("Ожидание начала игры...\nСтатус игроков: \n");
         TelegramBtn btn = new TelegramBtn();

@@ -13,13 +13,16 @@ public class DbMapperGetQuestion extends DbMapper.Base<QuestionDb, Integer> {
 
     @Override
     public QuestionDb map(Integer questionId) {
-        QuestionDb questionDb = new ResultSetToQuestionDbMapper().map(
-                db.executeQuery("SELECT id, text FROM questions WHERE id = " + questionId));
+        String sql = "SELECT id, text FROM questions WHERE id = " + questionId;
+        ResultSet resultSet = db.executeQuery(sql);
+        QuestionDb questionDb = new ResultSetToQuestionDbMapper(sql).map(
+                resultSet);
         if (questionDb != null) {
-            ResultSet rs = db.executeQuery("SELECT text, rate FROM answers WHERE questionId = " + questionDb.getId() + " LIMIT 6");
+            sql = "SELECT text, rate FROM answers WHERE questionId = " + questionDb.getId() + " LIMIT 6";
+            ResultSet rs = db.executeQuery(sql);
            try {
                while (rs.next()) {
-                   questionDb = new ResultSetToAnswerMapper(db,questionDb).map(rs);
+                   questionDb = new ResultSetToAnswerMapper(questionDb,sql).map(rs);
                }
            } catch (SQLException throwables) {
                throwables.printStackTrace();

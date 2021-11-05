@@ -116,24 +116,24 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
     }
 
     public void sendChatMessage(BotChatMessage chatMessage) {
-        String msg ="*" + chatMessage.getFrom() + "* : \n" + chatMessage.getText();
+        String msg = "*" + chatMessage.getFrom() + "* : \n" + chatMessage.getText();
         SendMessage message = SendMessage.builder()
                 .parseMode("MarkdownV2")
                 .text(msg)
                 .chatId(String.valueOf(chatMessage.getTo()))
                 .build();
         try {
-            Message sent =  execute(message);
+            Message sent = execute(message);
             history.add(sent);
-            chat.addMessage(sent,chatMessage.getTo());
+            chat.addMessage(sent, chatMessage.getTo());
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void clearChat(long  id) {
-        for (Message message:chat.getPlayerMessages(id)) {
+    public void clearChat(long id) {
+        for (Message message : chat.getPlayerMessages(id)) {
             deleteMsg(message);
         }
         chat.clearChat(id);
@@ -151,10 +151,5 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void startGame(long id) {
-        // presenter.createGameForPlayer(id);
     }
 }

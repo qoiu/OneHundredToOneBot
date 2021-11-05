@@ -14,12 +14,15 @@ public class DbMapperGetGameByHostId extends DbMapper.Base<GameObject, Long> {
 
     @Override
     public GameObject map(Long id) {
-        ResultSet set = db.executeQuery("SELECT gameName,hostDialogId,id FROM game WHERE hostDialogId = " + id);
-        GameObject game = new ResultSetToGameObjectMapper().map(set);
+        String sql = "SELECT gameName,hostDialogId,id FROM game WHERE hostDialogId = " + id;
+        ResultSet set = db.executeQuery(sql);
+        GameObject game = new ResultSetToGameObjectMapper(sql).map(set);
+        if(game==null)return null;
         try {
-            ResultSet userSet = db.executeQuery("SELECT gameId, id, statusGame,users.name FROM userInGame NATURAL JOIN users WHERE gameId = " + game.getId());
+            sql = "SELECT gameId, id, statusGame,users.name FROM userInGame NATURAL JOIN users WHERE gameId = " + game.getId();
+            ResultSet userSet = db.executeQuery(sql);
             while (userSet.next()) {
-                game.addUserInGames(new ResultSetToUserInGameDbMapper().map(userSet));
+                game.addUserInGames(new ResultSetToUserInGameDbMapper(sql).map(userSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
