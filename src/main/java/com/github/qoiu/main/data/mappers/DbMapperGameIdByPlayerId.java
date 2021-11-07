@@ -4,9 +4,9 @@ import com.github.qoiu.main.data.DatabaseBase;
 
 import java.sql.SQLException;
 
-public class DbMapperGameByPlayerId extends DbMapper.Base<Integer,Long> {
+public class DbMapperGameIdByPlayerId extends DbMapper.Base<Integer,Long> {
 
-    public DbMapperGameByPlayerId(DatabaseBase db) {
+    public DbMapperGameIdByPlayerId(DatabaseBase db) {
         super(db);
     }
 
@@ -15,7 +15,7 @@ public class DbMapperGameByPlayerId extends DbMapper.Base<Integer,Long> {
         try {
             return db.executeQuery("SELECT gameId FROM userInGame WHERE id = " + id).getInt("gameId");
         } catch (SQLException e) {
-            return 0;
+            return null;
         }
     }
 }

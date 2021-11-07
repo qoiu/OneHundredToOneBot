@@ -21,7 +21,6 @@ public class SendMapperWaitingForPlayersClient extends SendMapper.Base {
         StringBuilder players = new StringBuilder("Ожидание начала игры...\nСтатус игроков: \n");
         TelegramBtn btn = new TelegramBtn();
         for (PlayerDb user : game.getUserInGames()) {
-            if (game.getHostId() != user.getId())
                 players
                         .append(user.getName())
                         .append(": готов")

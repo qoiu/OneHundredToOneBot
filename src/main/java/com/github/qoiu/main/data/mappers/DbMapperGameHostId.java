@@ -15,7 +15,7 @@ public class DbMapperGameHostId extends DbMapper.Base<Integer,Long> {
         try {
             return db.executeQuery("SELECT id FROM game WHERE hostDialogId = " + id).getInt("id");
         } catch (SQLException e) {
-            return 0;
+            return null;
         }
     }
 }

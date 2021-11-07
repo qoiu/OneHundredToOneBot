@@ -4,10 +4,7 @@ import com.github.qoiu.main.bot.BotChatMessage;
 import com.github.qoiu.main.bot.BotInterface;
 import com.github.qoiu.main.bot.BotMessage;
 import com.github.qoiu.main.bot.StateActions;
-import com.github.qoiu.main.data.DatabaseBase;
-import com.github.qoiu.main.data.GameObject;
-import com.github.qoiu.main.data.UserDb;
-import com.github.qoiu.main.data.UserMessaged;
+import com.github.qoiu.main.data.*;
 import com.github.qoiu.main.data.mappers.*;
 import com.github.qoiu.main.mappers.*;
 import com.github.qoiu.main.presenter.mappers.*;
@@ -63,10 +60,8 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         if (userMessaged.getMessage().startsWith("/")) {
             status = stateActions.actionCallback(userMessaged.getMessage());
             new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
-        } else if (status != PLAYER_IN_GAME) {
-            if (messageMap.containsKey(status))
-                sendMessage(messageMap.get(status).map(userMessaged));
-        } else {
+        }
+        if (status == PLAYER_IN_GAME) {
             games.get(userMessaged.getId()).getChatMessage(userMessaged);
         }
     }
@@ -103,17 +98,27 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
 
     public void notifyGamePlayersChanged(int gameId) {
         GameObject game = new DbMapperGetGameByGameId(db).map(gameId);
-
-        for (UserMessaged user : new GamePlayersToUserMessagedsMapper().map(
-                new PlayersDbToGamePlayersMapper().map(
-                        game.getUserInGames()
-                ))) {
-            if (user.getId() != game.getHostId()){
-                sendMessage(new SendMapperWaitingForPlayersClient(db).map(user));
-            }else {
-                sendMessage(new SendMapperWaitingForPlayersHost(db).map(user));
+        if(!hostInGame(game)){
+            notifyGameCanceled(game);
+        }else {
+            for (UserMessaged user : new GamePlayersToUserMessagedsMapper().map(
+                    new PlayersDbToGamePlayersMapper().map(
+                            game.getUserInGames()
+                    ))) {
+                if (user.getId() != game.getHostId()){
+                    sendMessage(new SendMapperWaitingForPlayersClient(db).map(user));
+                }else {
+                    sendMessage(new SendMapperWaitingForPlayersHost(db).map(user));
+                }
             }
         }
+    }
+
+    private boolean hostInGame(GameObject game){
+        for (PlayerDb player:game.getUserInGames()) {
+            if(player.getId()==game.getHostId())return true;
+        }
+        return false;
     }
 
     public void notifyGameCanceled(GameObject game){
@@ -125,11 +130,12 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
                 sendMessage(new SendMapperGameCancelledClient(db).map(user));
             }
         }
+        new DbMapperClearGame(db).map(game.getHostId());
     }
 
     private void checkForNewUsers(UserMessaged userMessaged) {
         UserDb userDb = new DbMapperGetUserById(db).map(userMessaged.getId());
-        if (userDb.getName().equals(""))
+        if (userDb==null)
             new DbMapperAddUser(db).map(new UserMessagedToUserDb(0).map(userMessaged));
     }
 
