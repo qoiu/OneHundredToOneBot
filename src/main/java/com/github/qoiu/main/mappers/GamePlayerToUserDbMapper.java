@@ -6,6 +6,9 @@ import com.github.qoiu.main.presenter.GamePlayer;
 
 public class GamePlayerToUserDbMapper implements Mapper<GamePlayer, UserDb> {
     private int status;
+    private int gamePlay;
+    private int gameWin;
+    private int highScore;
     public GamePlayerToUserDbMapper(int status) {
         this.status = status;
     }

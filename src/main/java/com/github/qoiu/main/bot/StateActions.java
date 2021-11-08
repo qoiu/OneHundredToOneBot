@@ -16,8 +16,9 @@ public class StateActions {
   }
 
     private void initCallback(){
+        mapCallback.put("/start",PLAYER_WAITING_ACTION);
         mapCallback.put("/menu",PLAYER_WAITING_ACTION);
-        mapCallback.put("/start",PLAYER_WAITING_OTHER_PLAYERS_HOST);
+        mapCallback.put("/newGame",PLAYER_WAITING_OTHER_PLAYERS_HOST);
         mapCallback.put("/connecting",PLAYER_CHOSE_GAME);
         mapCallback.put("/connect",PLAYER_WAITING_OTHER_PLAYERS);
         mapCallback.put("/startGame",PLAYER_IN_GAME);

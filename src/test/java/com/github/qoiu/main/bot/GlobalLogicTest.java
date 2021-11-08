@@ -78,7 +78,7 @@ public class GlobalLogicTest {
 //        Assert.assertEquals(expected, botReceiveActual);
 
         //send callback to start game
-        user1 = new UserMessaged("Alex",225L,"/start");
+        user1 = new UserMessaged("Alex",225L,"/newGame");
         presenter.receiveCallback(user1);
         Assert.assertEquals(new SendMapperCreateGame(db).map(user1).getText(), botReceiveActual);
 
@@ -129,7 +129,7 @@ public class GlobalLogicTest {
 
 
         //send callback to start game
-        user1 = new UserMessaged("Alex",225L,"/start");
+        user1 = new UserMessaged("Alex",225L,"/newGame");
         presenter.receiveCallback(user1);
         Assert.assertEquals(new SendMapperCreateGame(db).map(user1).getText(), botReceiveActual);
 

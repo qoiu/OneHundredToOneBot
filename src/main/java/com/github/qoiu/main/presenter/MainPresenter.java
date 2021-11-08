@@ -20,15 +20,16 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
                          DatabaseBase db) {
         this.bot = bot;
         this.db = db;
+        new DbMapperRestartApp(db).map(null);
         bot.setPresenter(this);
         initMessageMap();
     }
 
     private void initMessageMap() {
-        messageMap.put(PLAYER_BASE_STATUS, new SendMapperMainMenu(db,this));
-        messageMap.put(PLAYER_WAITING_ACTION, new SendMapperMainMenu(db,this));
+        messageMap.put(PLAYER_BASE_STATUS, new SendMapperMainMenu(db, this));
+        messageMap.put(PLAYER_WAITING_ACTION, new SendMapperMainMenu(db, this));
         messageMap.put(PLAYER_CHOSE_GAME, new SendMapperListOfGames(db));
-        messageMap.put(PLAYER_WAITING_OTHER_PLAYERS, new SendMapperAddPlayerToGame(db,this));
+        messageMap.put(PLAYER_WAITING_OTHER_PLAYERS, new SendMapperAddPlayerToGame(db, this));
         messageMap.put(PLAYER_WAITING_OTHER_PLAYERS_HOST, new SendMapperCreateGame(db));
     }
 
@@ -60,6 +61,10 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         if (userMessaged.getMessage().startsWith("/")) {
             status = stateActions.actionCallback(userMessaged.getMessage());
             new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
+            SendMessage sendMessage = null;
+            if (messageMap.containsKey(status))
+                sendMessage = messageMap.get(status).map(userMessaged);
+            if (sendMessage != null) sendMessage(sendMessage);
         }
         if (status == PLAYER_IN_GAME) {
             games.get(userMessaged.getId()).getChatMessage(userMessaged);
@@ -71,62 +76,58 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         int status = stateActions.actionCallback(userMessaged.getMessage());
         new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
         if (status != PLAYER_IN_GAME) {
-            if (games.containsKey(userMessaged.getId())&& games.get(userMessaged.getId())!=null) {
+            if (games.containsKey(userMessaged.getId()) && games.get(userMessaged.getId()) != null) {
                 games.get(userMessaged.getId()).playerLeaveGame(userMessaged);
-                games.put(userMessaged.getId(),null);
+                games.put(userMessaged.getId(), null);
             }
             SendMessage sendMessage = null;
             if (messageMap.containsKey(status))
                 sendMessage = messageMap.get(status).map(userMessaged);
-            if(sendMessage!=null)sendMessage(sendMessage);
+            if (sendMessage != null) sendMessage(sendMessage);
             new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
-        } else {
-            if (!games.containsKey(userMessaged.getId())|| games.get(userMessaged.getId())==null) {
-                GameObject game =
-                        new DbMapperGetGameByHostId(db).map(userMessaged.getId());
-                List<GamePlayer> playerList= new PlayersDbToGamePlayersMapper().map(game.getUserInGames());
-                GamePresenter gamePresenter;
-                gamePresenter =  new GamePresenter(db, playerList,this);
-                for (GamePlayer player:playerList) {
-                    games.put(userMessaged.getId(),gamePresenter);
-                }
-            } else {
-                // TODO: 30.10.2021 actions for  other players
+        } else if (!games.containsKey(userMessaged.getId()) || games.get(userMessaged.getId()) == null) {
+            GameObject game =
+                    new DbMapperGetGameByHostId(db).map(userMessaged.getId());
+            List<GamePlayer> playerList = new PlayersDbToGamePlayersMapper().map(game.getUserInGames());
+            GamePresenter gamePresenter;
+            gamePresenter = new GamePresenter(db, playerList, this);
+            for (GamePlayer player : playerList) {
+                games.put(player.getId(), gamePresenter);
             }
         }
     }
 
     public void notifyGamePlayersChanged(int gameId) {
         GameObject game = new DbMapperGetGameByGameId(db).map(gameId);
-        if(!hostInGame(game)){
+        if (!hostInGame(game)) {
             notifyGameCanceled(game);
-        }else {
+        } else {
             for (UserMessaged user : new GamePlayersToUserMessagedsMapper().map(
                     new PlayersDbToGamePlayersMapper().map(
                             game.getUserInGames()
                     ))) {
-                if (user.getId() != game.getHostId()){
+                if (user.getId() != game.getHostId()) {
                     sendMessage(new SendMapperWaitingForPlayersClient(db).map(user));
-                }else {
+                } else {
                     sendMessage(new SendMapperWaitingForPlayersHost(db).map(user));
                 }
             }
         }
     }
 
-    private boolean hostInGame(GameObject game){
-        for (PlayerDb player:game.getUserInGames()) {
-            if(player.getId()==game.getHostId())return true;
+    private boolean hostInGame(GameObject game) {
+        for (PlayerDb player : game.getUserInGames()) {
+            if (player.getId() == game.getHostId()) return true;
         }
         return false;
     }
 
-    public void notifyGameCanceled(GameObject game){
+    public void notifyGameCanceled(GameObject game) {
         for (UserMessaged user : new GamePlayersToUserMessagedsMapper().map(
                 new PlayersDbToGamePlayersMapper().map(
                         game.getUserInGames()
                 ))) {
-            if (user.getId() != game.getHostId()){
+            if (user.getId() != game.getHostId()) {
                 sendMessage(new SendMapperGameCancelledClient(db).map(user));
             }
         }
@@ -135,7 +136,7 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
 
     private void checkForNewUsers(UserMessaged userMessaged) {
         UserDb userDb = new DbMapperGetUserById(db).map(userMessaged.getId());
-        if (userDb==null)
+        if (userDb == null)
             new DbMapperAddUser(db).map(new UserMessagedToUserDb(0).map(userMessaged));
     }
 

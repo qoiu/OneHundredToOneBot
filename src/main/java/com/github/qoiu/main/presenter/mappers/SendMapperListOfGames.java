@@ -25,7 +25,7 @@ public class SendMapperListOfGames extends SendMapper.Base{
             btn.addColumn("Меню","/menu");
             return base(userMessaged.getId(), "Список игр:",btn);
         }else {
-            btn.addColumn("Новая игра", "/start");
+            btn.addColumn("Новая игра", "/newGame");
             btn.addColumn("Меню","/menu");
             return base(userMessaged.getId(), "Нет начатых игр. \nБудьте первым!",btn);
         }

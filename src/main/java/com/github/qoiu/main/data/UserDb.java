@@ -8,12 +8,24 @@ public class UserDb {
     private final long id;
     private int status;
     private final String name;
+    private int gamePlay;
+    private int gameWin;
+    private int highScore;
     private Object extra;
 
     public UserDb(long id, int status, String name) {
         this.id = id;
         this.status = status;
         this.name = name;
+    }
+
+    public UserDb(long id, int status, String name, int gamePlay, int gameWin, int highScore) {
+        this.id = id;
+        this.status = status;
+        this.name = name;
+        this.gamePlay = gamePlay;
+        this.gameWin = gameWin;
+        this.highScore = highScore;
     }
 
     public String getName() {
@@ -49,6 +61,30 @@ public class UserDb {
     public UserDb setExtra(Object extra) {
         this.extra = extra;
         return this;
+    }
+
+    public int getGamePlay() {
+        return gamePlay;
+    }
+
+    public void setGamePlay(int gamePlay) {
+        this.gamePlay = gamePlay;
+    }
+
+    public int getGameWin() {
+        return gameWin;
+    }
+
+    public void setGameWin(int gameWin) {
+        this.gameWin = gameWin;
+    }
+
+    public int getHighScore() {
+        return highScore;
+    }
+
+    public void setHighScore(int highScore) {
+        this.highScore = highScore;
     }
 
     @Override

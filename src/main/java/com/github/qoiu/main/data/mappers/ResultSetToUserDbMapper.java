@@ -17,7 +17,10 @@ public class ResultSetToUserDbMapper extends DbMapper.Result<UserDb, ResultSet> 
             long id = set.getLong("id");
             int status = set.getInt("state");
             String name = set.getString("name");
-            return new UserDb(id,status,name);
+            int gamePlayed = set.getInt("gamesPlayed");
+            int gameWin = set.getInt("gamesWin");
+            int gameHighScore = set.getInt("highScore");
+            return new UserDb(id,status,name,gamePlayed,gameWin,gameHighScore);
         } catch (SQLException e) {
             return exception(e);
         }

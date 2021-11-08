@@ -7,9 +7,8 @@ import com.github.qoiu.main.bot.PreparedSendMessages;
 import com.github.qoiu.main.data.DatabaseBase;
 import com.github.qoiu.main.data.UserMessaged;
 import com.github.qoiu.main.data.mappers.*;
-import com.github.qoiu.main.mappers.GamePlayerToUserDbMapper;
-import com.github.qoiu.main.mappers.QuestionDbToQuestionMapper;
-import com.github.qoiu.main.mappers.UserMessagedToGamePlayer;
+import com.github.qoiu.main.mappers.*;
+import com.github.qoiu.main.presenter.mappers.SendMapperEndGame;
 import com.github.qoiu.main.presenter.mappers.SendMapperLeaveGame;
 import com.github.qoiu.main.presenter.mappers.SendMapperSimpleText;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -18,30 +17,54 @@ import java.util.*;
 
 public class GamePresenter {
     private final int MIN_SAME_SYMBOL_CHECK = 3;
+    private final Statistic statistic;
     private final List<GamePlayer> list;
     private final DatabaseBase db;
     private Round current;
+    private int currentRoundId = 0;
+    private final GameScoreboard scoreboard;
     private final MessageSender sender;
     private final PreparedSendMessages messages;
-    private final Map<Long, Integer> gameScores;
+    private final List<RoundType> rounds = new ArrayList<>(Arrays.asList(
+            new RoundUsual(), new RoundDouble(), new RoundTriple(), new RoundReversed()));
 
     public GamePresenter(DatabaseBase db, List<GamePlayer> list, MessageSender sender) {
         this.db = db;
         this.sender = sender;
         this.list = list;
-        gameScores = new HashMap<>();
-        messages= new PreparedSendMessages();
+        statistic = new Statistic(list);
+        messages = new PreparedSendMessages();
+        scoreboard = new GameScoreboard(list);
         for (GamePlayer player : list) {
             new DbMapperUpdateUser(db).map(new GamePlayerToUserDbMapper(StateStatus.PLAYER_IN_GAME).map(player));
-            gameScores.put(player.getId(), 0);
         }
         startNewRound();
     }
 
     void startNewRound() {
         if (current != null) current.clear();
-        current = new Round();
-        current.start();
+        if (currentRoundId < rounds.size()) {
+            current = new Round(rounds.get(currentRoundId));
+            currentRoundId += 1;
+            current.start();
+        } else {
+            gameEnd();
+        }
+    }
+
+    private void gameEnd() {
+        sendAll("Игра окончена");
+        String text = scoreboard.getWinnerText() + "\n";
+        for (GamePlayer player : list) {
+            sender.clearChat(player.getId());
+            sender.sendMessage(new SendMapperEndGame(text + scoreboard.getScoreboard())
+                    .map(new GamePlayerToUserMessagedMapper().map(player)));
+            int win = 0;
+            if (player == scoreboard.getWinner()) win = 1;
+            new DbMapperUpdateUserResults(db).map(
+                    new GamePlayerResultsToUserDbMapper(1, win, scoreboard.getPlayerScores(player)).map(player));
+
+        }
     }
 
 
@@ -67,40 +90,41 @@ public class GamePresenter {
         }
         if (userMessaged.getId() == current.activePlayer.getId())
             if (userMessaged.getMessage().charAt(0) != '?') {
-                current.checkAnswer(userMessaged.getMessage().substring(1));
-                return;
+                current.checkAnswer(userMessaged.getMessage());
+                sendChatMsgToAll("Счёт", scoreboard.getScoreboard());
+            } else {
+                sendChatMsgToAll(userMessaged.getName(), userMessaged.getMessage().substring(1));
             }
-        // TODO: 30.10.2021 test me
-        sendChatMsgToAll(userMessaged.getName(), text);
+        current.updateQuestionForPlayers();
     }
 
     public void playerLeaveGame(UserMessaged userMessaged) {
         System.out.println("list: " + list.size());
         list.remove(new UserMessagedToGamePlayer().map(userMessaged));
         System.out.println("list after: " + list.size());
-        if(list.size()==0)current.clear();
+        if (list.size() == 0) current.clear();
     }
 
     private class Round {
+        private final RoundType round;
         GamePlayer activePlayer;
         List<GamePlayer> playersSet = new ArrayList<>();
         private final Question currentQuestion;
         private final Statistic statistic;
-        private final Set<Long> ids;
 
-        public Round() {
-            ids = new HashSet<>();
+        public Round(RoundType roundType) {
+            this.round = roundType;
             statistic = new Statistic(list);
+            Set<Long> ids = new HashSet<>();
             for (GamePlayer player : list) {
                 ids.add(player.getId());
             }
 
             List<Integer> qIds = new ArrayList<>(new DbMapperGetUnansweredQuestionsByPlayers(db).map(ids));
             int currentQuestionId = qIds.get(new Random().nextInt(qIds.size()));
-//            currentQuestionId = 322;
-
             currentQuestion = new QuestionDbToQuestionMapper().map(
                     new DbMapperGetQuestion(db).map(currentQuestionId));
+            currentQuestion.getAnswers().sort(round.getComparator());
         }
 
         public Statistic getStatistic() {
@@ -110,9 +134,9 @@ public class GamePresenter {
 
         private void updateQuestionForPlayers() {
             SendMessage msg;
-            String before = current.getStatistic().getPlayersStatistic();
+            String before = round.getName() + "\n" + current.getStatistic().getPlayersStatistic();
             for (GamePlayer player : list) {
-                if(activePlayer!=null) {
+                if (activePlayer != null) {
                     msg = messages.playerAnswer(
                             before + ((player != activePlayer) ? activePlayer.getName() + " отвечает на вопрос:" : "Вы отвечаете на вопрос:"),
                             player.getId(),
@@ -123,14 +147,34 @@ public class GamePresenter {
             }
         }
 
+        private void roundEndMessage() {
+            SendMessage msg;
+            for (Question.Answer answ : currentQuestion.getAnswers()) {
+                answ.setAnswered();
+            }
+            for (GamePlayer player : list) {
+                msg = messages.playerAnswer(
+                        "Раунд окончен. Результаты:\n" + scoreboard.getScoreboard() + "\nНовый раунд начнётся через 10 секунд",
+                        player.getId(),
+                        currentQuestion
+                );
+                sender.sendMessage(msg);
+            }
+            clearChatForAll();
+            try {
+                Thread.sleep(8000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            startNewRound();
+        }
+
         private void checkAnswer(String answer) {
             Question.Answer trueAnswer = null;
             for (Question.Answer correctAnswer : currentQuestion.getAnswers()) {
                 if (!correctAnswer.isAnswered())
                     if (compareStrings(answer, correctAnswer.getText())) {
                         trueAnswer = correctAnswer;
-                        int cScore = gameScores.get(activePlayer.getId()) + currentQuestion.getPercentageOfAnswer(trueAnswer);
-                        gameScores.put(activePlayer.getId(), cScore);
                         trueAnswer.upgradeRate();
                         new DbMapperUpdateQuestionAnswerRate(db, currentQuestion.getId()).map(trueAnswer);
                     }
@@ -142,12 +186,13 @@ public class GamePresenter {
                 checkRoundEnd();
             } else {
                 trueAnswer.setAnswered();
-                sendChatMsgToAll(activePlayer.getName() + " *отвечает* '" + answer + "'", "Также ответили " + currentQuestion.getPercentageOfAnswer(trueAnswer) + "%");
+                int scoreAdded = round.setScores(currentQuestion, trueAnswer);
+                scoreboard.addScores(activePlayer, scoreAdded);
+                sendChatMsgToAll(activePlayer.getName() + " *отвечает* '" + answer + "'", "За этот ответ вы получаете " + scoreAdded + " очков");
                 if (checkAnsweredQuestions()) {
                     checkRoundEnd();
                 }
             }
-            updateQuestionForPlayers();
         }
 
         private void selectPlayer() {
@@ -157,7 +202,7 @@ public class GamePresenter {
                 }
             }
             activePlayer = playersSet.get(0);
-            if(activePlayer!=null)updateQuestionForPlayers();
+            if (activePlayer != null) updateQuestionForPlayers();
         }
 
         private void checkRoundEnd() {
@@ -166,7 +211,7 @@ public class GamePresenter {
                 for (GamePlayer player : list) {
                     new DbMapperAddUserAnswer(db).map(new GamePlayerToUserDbMapper(5).map(player).setExtra(currentQuestion.getId()));
                 }
-                startNewRound();
+                roundEndMessage();
             } else {
                 //next try
                 selectPlayer();
@@ -193,8 +238,8 @@ public class GamePresenter {
         }
 
         private boolean compareStrings(String actual, String expected) {
-            actual = actual.trim().toLowerCase().replace("ё","е");
-            expected = expected.trim().toLowerCase().replace("ё","е");
+            actual = actual.trim().toLowerCase().replace("ё", "е");
+            expected = expected.trim().toLowerCase().replace("ё", "е");
             if (actual.contains(expected) && actual.length() >= MIN_SAME_SYMBOL_CHECK)
                 return true;
             if (expected.contains(actual) && actual.length() >= MIN_SAME_SYMBOL_CHECK)
@@ -227,7 +272,7 @@ public class GamePresenter {
         }
 
         public void start() {
-            sendAll(getScoreboard() + "\nОжидание других игроков...");
+            sendAll(scoreboard.getScoreboard() + "\nОжидание других игроков...");
             try {
                 Thread.sleep(400);
             } catch (InterruptedException e) {
@@ -252,15 +297,8 @@ public class GamePresenter {
         }
     }
 
-    String getScoreboard() {
-        StringBuilder result = new StringBuilder();
-        for (GamePlayer player : list) {
-            result.append(player.getName()).append(" : ").append(gameScores.get(player.getId())).append("\n");
-        }
-        return result.toString();
-    }
 
-    class Statistic {
+    private class Statistic {
         Map<GamePlayer, Integer> tryAmount;
         private final int MAX_TRY = 3;
 
@@ -287,5 +325,4 @@ public class GamePresenter {
             tryAmount.put(activePlayer, tryAmount.get(activePlayer) - 1);
         }
     }
-
 }

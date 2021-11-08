@@ -28,8 +28,8 @@ public class DbMapperTest {
         int gameId = new DbMapperGameHostId(db).map(112L);
 
         Assert.assertEquals(actualGameId, gameId);
-        int gameIncorrectId = new DbMapperGameHostId(db).map(145L);
-        Assert.assertEquals(gameIncorrectId, 0);
+        Integer gameIncorrectId = new DbMapperGameHostId(db).map(145L);
+        Assert.assertNull(gameIncorrectId);
     }
 
     @Test
@@ -51,8 +51,8 @@ public class DbMapperTest {
         GameObject expected = new GameObject("Alex", 112L, actualGameId);
         Assert.assertEquals(game, expected);
         Assert.assertEquals(1,game.getUserInGames().size());
-        int gameIncorrectId = new DbMapperGameHostId(db).map(145L);
-        Assert.assertEquals(gameIncorrectId, 0);
+        Integer gameIncorrectId = new DbMapperGameHostId(db).map(145L);
+        Assert.assertNull(gameIncorrectId);
     }
 
     @Test

@@ -27,6 +27,10 @@ public class Question {
         return (int) amount;
     }
 
+    public int getPercentageOfAnswer(int id){
+        return getPercentageOfAnswer(answers.get(id));
+    }
+
     public String getText() {
         return text;
     }
