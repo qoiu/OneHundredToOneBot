@@ -1,13 +1,13 @@
 package com.github.qoiu.main.presenter.mappers;
 
 import com.github.qoiu.main.bot.TelegramBtn;
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.UserMessaged;
 import com.github.qoiu.main.data.mappers.DbMapperDeletePlayer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 public class SendMapperGameCancelledClient extends SendMapper.Base {
-    public SendMapperGameCancelledClient(DatabaseBase db) {
+    public SendMapperGameCancelledClient(DatabaseInterface.Executor db) {
         super(db);
     }
 

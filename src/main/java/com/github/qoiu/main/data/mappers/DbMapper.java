@@ -1,6 +1,6 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,8 +12,8 @@ public interface DbMapper<Output, Input> {
 
 
     abstract class Base<Output, Input> implements DbMapper<Output, Input>{
-        DatabaseBase db;
-        public Base(DatabaseBase db) {
+        DatabaseInterface.Executor db;
+        public Base(DatabaseInterface.Executor db) {
             this.db = db;
         }
     }

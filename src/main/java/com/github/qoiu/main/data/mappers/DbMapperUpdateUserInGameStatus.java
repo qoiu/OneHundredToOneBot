@@ -1,10 +1,10 @@
 package com.github.qoiu.main.data.mappers;
 
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.PlayerDb;
-import com.github.qoiu.main.data.DatabaseBase;
 
 public class DbMapperUpdateUserInGameStatus extends DbMapper.Base<Integer, PlayerDb>{
-    public DbMapperUpdateUserInGameStatus(DatabaseBase db) {
+    public DbMapperUpdateUserInGameStatus(DatabaseInterface.Executor db) {
         super(db);
     }
 

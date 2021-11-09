@@ -1,6 +1,6 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class DbMapperGetUnansweredQuestionsByPlayers extends DbMapper.Base<Set<Integer>, Set<Long>> {
-    public DbMapperGetUnansweredQuestionsByPlayers(DatabaseBase db) {
+    public DbMapperGetUnansweredQuestionsByPlayers(DatabaseInterface.Executor db) {
         super(db);
     }
 

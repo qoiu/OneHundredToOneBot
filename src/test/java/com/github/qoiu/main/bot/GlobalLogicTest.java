@@ -1,9 +1,6 @@
 package com.github.qoiu.main.bot;
 
-import com.github.qoiu.main.data.DatabaseBase;
-import com.github.qoiu.main.data.GameObject;
-import com.github.qoiu.main.data.UserDb;
-import com.github.qoiu.main.data.UserMessaged;
+import com.github.qoiu.main.data.*;
 import com.github.qoiu.main.data.mappers.DbMapperGameHostId;
 import com.github.qoiu.main.data.mappers.DbMapperGetGameByHostId;
 import com.github.qoiu.main.data.mappers.DbMapperGetUserById;
@@ -22,7 +19,7 @@ import java.util.List;
 public class GlobalLogicTest {
 
     private static MainPresenter presenter;
-    private static DatabaseBase db;
+    private static DatabaseInterface.Global db;
     private static String botReceiveActual;
     private static final List<BotChatMessage> botChatMessageList=new ArrayList<>();
     private static final List<String> sendMessageList=new ArrayList<>();

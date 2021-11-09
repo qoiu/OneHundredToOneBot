@@ -1,6 +1,6 @@
 package com.github.qoiu.main.presenter.mappers;
 
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.UserMessaged;
 import com.github.qoiu.main.data.mappers.DbMapperAddPlayer;
 import com.github.qoiu.main.mappers.UserMessagedToUserDb;
@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 public class SendMapperAddPlayerToGame extends SendMapper.Base {
     private PlayerNotifier notifier;
-    public SendMapperAddPlayerToGame(DatabaseBase db, PlayerNotifier notifier) {
+    public SendMapperAddPlayerToGame(DatabaseInterface.Executor db, PlayerNotifier notifier) {
         super(db);
         this.notifier = notifier;
     }

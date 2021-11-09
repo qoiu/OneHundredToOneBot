@@ -7,4 +7,6 @@ public interface MessageSender {
     void sendMessage(SendMessage sendMessage);
     void sendChatMessage(BotChatMessage chatMessage);
     void clearChat(long  id);
+
+
 }

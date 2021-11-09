@@ -1,10 +1,10 @@
 package com.github.qoiu.main.data.mappers;
 
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.MessageDb;
-import com.github.qoiu.main.data.DatabaseBase;
 
 public class DbMapperAddMessage extends DbMapper.Base<Integer, MessageDb> {
-    public DbMapperAddMessage(DatabaseBase db) {
+    public DbMapperAddMessage(DatabaseInterface.Executor db) {
         super(db);
     }
 

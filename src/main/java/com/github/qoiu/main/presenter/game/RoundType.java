@@ -1,4 +1,4 @@
-package com.github.qoiu.main.presenter;
+package com.github.qoiu.main.presenter.game;
 
 import com.github.qoiu.main.Question;
 

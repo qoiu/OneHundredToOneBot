@@ -1,7 +1,7 @@
 package com.github.qoiu.main.data.mappers;
 
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.MessageDb;
-import com.github.qoiu.main.data.DatabaseBase;
 
 import javax.validation.constraints.Null;
 import java.sql.ResultSet;
@@ -11,7 +11,7 @@ import java.util.List;
 
 public class DbMapperGetDisconnectedMessages extends DbMapper.Base<List<MessageDb>, Null> {
 
-    public DbMapperGetDisconnectedMessages(DatabaseBase db) {
+    public DbMapperGetDisconnectedMessages(DatabaseInterface.Executor db) {
         super(db);
     }
 

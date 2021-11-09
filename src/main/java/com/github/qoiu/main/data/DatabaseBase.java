@@ -2,11 +2,10 @@ package com.github.qoiu.main.data;
 
 import java.sql.*;
 
-public class DatabaseBase {
+public class DatabaseBase implements DatabaseInterface.Global {
 
     private static Connection connection;
     private static Statement statement;
-    public static final String ERROR = "Error";
 
     public DatabaseBase(String url) {
         start(url);

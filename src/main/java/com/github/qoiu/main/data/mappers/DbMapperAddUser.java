@@ -1,11 +1,11 @@
 package com.github.qoiu.main.data.mappers;
 
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.UserDb;
-import com.github.qoiu.main.data.DatabaseBase;
 
 public class DbMapperAddUser extends DbMapper.Base<Integer, UserDb> {
 
-    public DbMapperAddUser(DatabaseBase db) {
+    public DbMapperAddUser(DatabaseInterface.Executor db) {
         super(db);
     }
 

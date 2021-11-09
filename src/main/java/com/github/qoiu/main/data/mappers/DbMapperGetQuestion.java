@@ -1,13 +1,13 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.QuestionDb;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DbMapperGetQuestion extends DbMapper.Base<QuestionDb, Integer> {
-    public DbMapperGetQuestion(DatabaseBase db) {
+    public DbMapperGetQuestion(DatabaseInterface.Executor db) {
         super(db);
     }
 

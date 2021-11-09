@@ -1,14 +1,14 @@
 package com.github.qoiu.main.data.mappers;
 
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.GameObject;
-import com.github.qoiu.main.data.DatabaseBase;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DbMapperGetGameByHostId extends DbMapper.Base<GameObject, Long> {
 
-    public DbMapperGetGameByHostId(DatabaseBase db) {
+    public DbMapperGetGameByHostId(DatabaseInterface.Executor db) {
         super(db);
     }
 

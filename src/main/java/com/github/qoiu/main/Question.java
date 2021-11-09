@@ -1,5 +1,7 @@
 package com.github.qoiu.main;
 
+import com.github.qoiu.main.presenter.game.Comparator;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +18,14 @@ public class Question {
     public Question(String text) {
         this.text = text;
         this.id = 0;
+    }
+    public Answer checkTrueAnswer(String answer){
+        for (Question.Answer correctAnswer : getAnswers()) {
+            if (!correctAnswer.isAnswered() && new Comparator.Base().compare(answer, correctAnswer.getText())) {
+                return correctAnswer;
+                 }
+        }
+        return null;
     }
 
     public int getPercentageOfAnswer(Question.Answer answer){
@@ -39,6 +49,11 @@ public class Question {
         return id;
     }
 
+    public void markAllAnswerAsAnswered(){
+        for (Question.Answer answer : getAnswers()) {
+            answer.setAnswered();
+        }
+    }
 
     public void addAnswer(Answer answer){
         answers.add(answer);
@@ -61,7 +76,9 @@ public class Question {
 
         public void setAnswered(){
             answered = true;
+            upgradeRate();
         }
+
 
         public boolean isAnswered() {
             return answered;
@@ -75,7 +92,7 @@ public class Question {
             return text;
         }
 
-        public void upgradeRate() {
+        private void upgradeRate() {
             rate+=1;
         }
     }

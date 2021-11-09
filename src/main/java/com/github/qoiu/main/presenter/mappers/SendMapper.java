@@ -1,7 +1,7 @@
 package com.github.qoiu.main.presenter.mappers;
 
 import com.github.qoiu.main.bot.TelegramBtn;
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.UserMessaged;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
@@ -10,10 +10,10 @@ public interface SendMapper{
 
 
     abstract class Base implements SendMapper{
-        protected DatabaseBase db;
+        protected DatabaseInterface.Executor db;
         protected TelegramBtn btn;
 
-        public Base(DatabaseBase db) {
+        public Base(DatabaseInterface.Executor db) {
             this.db = db;
             btn = new TelegramBtn();
         }

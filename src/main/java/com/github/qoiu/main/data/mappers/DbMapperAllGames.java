@@ -1,7 +1,7 @@
 package com.github.qoiu.main.data.mappers;
 
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.GameObject;
-import com.github.qoiu.main.data.DatabaseBase;
 
 import javax.validation.constraints.Null;
 import java.sql.ResultSet;
@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class DbMapperAllGames extends DbMapper.Base<List<GameObject>, Null> {
 
-    public DbMapperAllGames(DatabaseBase db) {
+    public DbMapperAllGames(DatabaseInterface.Executor db) {
         super(db);
     }
 

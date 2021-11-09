@@ -1,12 +1,12 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 
 import java.sql.SQLException;
 
 public class DbMapperGameIdByPlayerId extends DbMapper.Base<Integer,Long> {
 
-    public DbMapperGameIdByPlayerId(DatabaseBase db) {
+    public DbMapperGameIdByPlayerId(DatabaseInterface.Executor db) {
         super(db);
     }
 

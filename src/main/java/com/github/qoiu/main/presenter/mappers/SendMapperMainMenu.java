@@ -1,7 +1,7 @@
 package com.github.qoiu.main.presenter.mappers;
 
 import com.github.qoiu.main.bot.TelegramBtn;
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.UserMessaged;
 import com.github.qoiu.main.data.mappers.DbMapperDeletePlayer;
 import com.github.qoiu.main.data.mappers.DbMapperGameIdByPlayerId;
@@ -11,7 +11,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 public class SendMapperMainMenu extends SendMapper.Base {
     PlayerNotifier notifier;
 
-    public SendMapperMainMenu(DatabaseBase db, PlayerNotifier notifier) {
+    public SendMapperMainMenu(DatabaseInterface.Executor db, PlayerNotifier notifier) {
         super(db);
         this.notifier = notifier;
     }

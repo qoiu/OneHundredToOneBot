@@ -1,11 +1,11 @@
 package com.github.qoiu.main.data.mappers;
 
 import com.github.qoiu.main.Question;
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 
 public class DbMapperUpdateQuestionAnswerRate extends DbMapper.Base<Integer, Question.Answer> {
     private int questionId;
-    public DbMapperUpdateQuestionAnswerRate(DatabaseBase db,int questionId) {
+    public DbMapperUpdateQuestionAnswerRate(DatabaseInterface.Executor db, int questionId) {
         super(db);
         this.questionId = questionId;
     }

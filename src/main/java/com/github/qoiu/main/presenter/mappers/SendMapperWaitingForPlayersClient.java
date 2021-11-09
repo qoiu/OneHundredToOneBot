@@ -1,16 +1,13 @@
 package com.github.qoiu.main.presenter.mappers;
 
 import com.github.qoiu.main.bot.TelegramBtn;
-import com.github.qoiu.main.data.DatabaseBase;
-import com.github.qoiu.main.data.GameObject;
-import com.github.qoiu.main.data.PlayerDb;
-import com.github.qoiu.main.data.UserMessaged;
+import com.github.qoiu.main.data.*;
 import com.github.qoiu.main.data.mappers.DbMapperGameIdByPlayerId;
 import com.github.qoiu.main.data.mappers.DbMapperGetGameByGameId;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 public class SendMapperWaitingForPlayersClient extends SendMapper.Base {
-    public SendMapperWaitingForPlayersClient(DatabaseBase db) {
+    public SendMapperWaitingForPlayersClient(DatabaseInterface.Executor db) {
         super(db);
     }
 

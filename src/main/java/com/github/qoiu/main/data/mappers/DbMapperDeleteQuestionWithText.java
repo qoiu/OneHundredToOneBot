@@ -1,9 +1,9 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 
 public class DbMapperDeleteQuestionWithText extends DbMapper.Base<Integer, Integer> {
-    public DbMapperDeleteQuestionWithText(DatabaseBase db) {
+    public DbMapperDeleteQuestionWithText(DatabaseInterface.Executor db) {
         super(db);
     }
 

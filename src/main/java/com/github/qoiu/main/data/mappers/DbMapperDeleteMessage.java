@@ -1,10 +1,10 @@
 package com.github.qoiu.main.data.mappers;
 
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.MessageDb;
-import com.github.qoiu.main.data.DatabaseBase;
 
 public class DbMapperDeleteMessage extends DbMapper.Base<Integer, MessageDb> {
-    public DbMapperDeleteMessage(DatabaseBase db) {
+    public DbMapperDeleteMessage(DatabaseInterface.Executor db) {
         super(db);
     }
 

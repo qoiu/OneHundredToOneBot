@@ -1,7 +1,7 @@
 package com.github.qoiu.main.presenter.mappers;
 
 import com.github.qoiu.main.bot.TelegramBtn;
-import com.github.qoiu.main.data.DatabaseBase;
+import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.GameObject;
 import com.github.qoiu.main.data.UserMessaged;
 import com.github.qoiu.main.data.mappers.DbMapperAllGames;
@@ -10,7 +10,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import java.util.List;
 
 public class SendMapperListOfGames extends SendMapper.Base{
-    public SendMapperListOfGames(DatabaseBase db) {
+    public SendMapperListOfGames(DatabaseInterface.Executor db) {
         super(db);
     }
 

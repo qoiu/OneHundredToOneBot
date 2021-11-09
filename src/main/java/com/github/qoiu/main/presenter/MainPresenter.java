@@ -7,6 +7,7 @@ import com.github.qoiu.main.bot.StateActions;
 import com.github.qoiu.main.data.*;
 import com.github.qoiu.main.data.mappers.*;
 import com.github.qoiu.main.mappers.*;
+import com.github.qoiu.main.presenter.game.GamePresenter;
 import com.github.qoiu.main.presenter.mappers.*;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
@@ -17,7 +18,7 @@ import static com.github.qoiu.main.StateStatus.*;
 
 public class MainPresenter implements MainPresenterInterface, MessageSender, PlayerNotifier {
     public MainPresenter(BotInterface bot,
-                         DatabaseBase db) {
+                         DatabaseInterface.Global db) {
         this.bot = bot;
         this.db = db;
         new DbMapperRestartApp(db).map(null);
@@ -36,7 +37,7 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
     private final HashMap<Integer, SendMapper> messageMap = new HashMap<>();
     private final HashMap<Long, GamePresenter> games = new HashMap<>();
     private final BotInterface bot;
-    private final DatabaseBase db;
+    private final DatabaseInterface.Global db;
     private final StateActions stateActions = new StateActions();
 
     @Override
@@ -90,7 +91,7 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
                     new DbMapperGetGameByHostId(db).map(userMessaged.getId());
             List<GamePlayer> playerList = new PlayersDbToGamePlayersMapper().map(game.getUserInGames());
             GamePresenter gamePresenter;
-            gamePresenter = new GamePresenter(db, playerList, this);
+            gamePresenter = new GamePresenter.Base(db, playerList, this);
             for (GamePlayer player : playerList) {
                 games.put(player.getId(), gamePresenter);
             }
