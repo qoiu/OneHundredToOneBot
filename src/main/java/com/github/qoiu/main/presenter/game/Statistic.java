@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-interface Statistic {
+public interface Statistic {
     int getAmount(GamePlayer player);
     void decreaseTry(GamePlayer activePlayer);
     boolean checkTryAmount();

@@ -1,22 +1,11 @@
 package com.github.qoiu.main.presenter.game;
 
 import com.github.qoiu.main.Question;
-import com.github.qoiu.main.bot.BotChatMessage;
-import com.github.qoiu.main.bot.PreparedSendMessages;
-import com.github.qoiu.main.data.DatabaseInterface;
-import com.github.qoiu.main.data.UserMessaged;
-import com.github.qoiu.main.data.mappers.DbMapperAddUserAnswer;
-import com.github.qoiu.main.data.mappers.DbMapperGetQuestion;
-import com.github.qoiu.main.data.mappers.DbMapperGetUnansweredQuestionsByPlayers;
-import com.github.qoiu.main.data.mappers.DbMapperUpdateQuestionAnswerRate;
-import com.github.qoiu.main.mappers.GamePlayerToUserDbMapper;
-import com.github.qoiu.main.mappers.QuestionDbToQuestionMapper;
+import com.github.qoiu.main.presenter.GameMessage;
 import com.github.qoiu.main.presenter.GamePlayer;
 import com.github.qoiu.main.presenter.MessageSender;
-import com.github.qoiu.main.presenter.mappers.SendMapperSimpleText;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.*;
 
@@ -27,9 +16,11 @@ interface Round {
 
     boolean isActivePlayer(GamePlayer player);
 
-    GameScoreboard finish();
+    void finish();
 
     void subscribe(SingleObserver<GameScoreboard> observer);
+
+    GamePlayer getActivePlayer();
 
     class Base implements Round {
         private final RoundType round;
@@ -37,16 +28,15 @@ interface Round {
         private List<GamePlayer> playerList;
         private List<GamePlayer> baseList;
         private final Question currentQuestion;
-        private final PreparedSendMessages messages;
         private final GameScoreboard scoreboard;
         private final Statistic statistic;
-        private DatabaseInterface.Executor db;
         private final MessageSender sender;
-        private final  Single<GameScoreboard> observable;
+        private final Single<GameScoreboard> observable;
         private SingleObserver<GameScoreboard> singleObserver;
+        private final GameActions gamePresenter;
 
         // TODO: 09.11.2021 Do something with sender. Too much for this class!
-        public Base(RoundType roundType, DatabaseInterface.Executor db, List<GamePlayer> list, MessageSender sender) {
+        public Base(RoundType roundType, GameActions gamePresenter, List<GamePlayer> list, MessageSender sender) {
             this.sender = sender;
             this.round = roundType;
             this.scoreboard = new GameScoreboard.Base(list);
@@ -60,16 +50,14 @@ interface Round {
                     Base.this.singleObserver = (SingleObserver<GameScoreboard>) observer;
                 }
             };
-            this.db = db;
-            messages = new PreparedSendMessages();
+            this.gamePresenter = gamePresenter;
 
             for (GamePlayer player : list) {
                 ids.add(player.getId());
             }
-            List<Integer> qIds = new ArrayList<>(new DbMapperGetUnansweredQuestionsByPlayers(db).map(ids));
+            List<Integer> qIds = new ArrayList<>(gamePresenter.getUnansweredQuestions(ids));
             int currentQuestionId = qIds.get(new Random().nextInt(qIds.size()));
-            currentQuestion = new QuestionDbToQuestionMapper().map(
-                    new DbMapperGetQuestion(db).map(currentQuestionId));
+            currentQuestion = gamePresenter.getQuestion(currentQuestionId);
             currentQuestion.getAnswers().sort(round.getComparator());
         }
 
@@ -111,10 +99,10 @@ interface Round {
                 checkRoundEnd();
             } else {
                 trueAnswer.setAnswered();
-                new DbMapperUpdateQuestionAnswerRate(db, currentQuestion.getId()).map(trueAnswer);
+                gamePresenter.updateQuestionAnswerRate(currentQuestion, trueAnswer);
                 int scoreAdded = round.setScores(currentQuestion, trueAnswer);
                 scoreboard.addScores(activePlayer, scoreAdded);
-                sendChatMsgToAll(activePlayer.getName() + " *отвечает* '" + answer + "'", "За этот ответ вы получаете " + scoreAdded + " очков");
+                sendChatMsgToAll(activePlayer.getName() + " *отвечает* '" + answer + "'", "Правильный ответ\n" + activePlayer.getName() + " получает " + scoreAdded + " очков");
                 if (checkAnsweredQuestions()) {
                     checkRoundEnd();
                 }
@@ -123,16 +111,14 @@ interface Round {
         }
 
         private void updateQuestionForPlayers() {
-            SendMessage msg;
             String before = round.getName() + "\n" + statistic.toString();
-            for (GamePlayer player : playerList) {
-                if (activePlayer != null) {
-                    msg = messages.playerAnswer(
-                            before + ((player != activePlayer) ? activePlayer.getName() + " отвечает на вопрос:" : "Вы отвечаете на вопрос:"),
-                            player.getId(),
-                            currentQuestion
-                    );
-                    sender.sendMessage(msg);
+            if (activePlayer != null) {
+                for (GamePlayer player : playerList) {
+                    GameMessage msg = new GameMessage(player.getId(),
+                            before + ((player != activePlayer)
+                                    ? activePlayer.getName() + " отвечает на вопрос:"
+                                    : "Вы отвечаете на вопрос:"));
+                    sender.updateQuestion(currentQuestion, msg);
                 }
             }
         }
@@ -143,15 +129,13 @@ interface Round {
         }
 
         private void roundEndMessage() {
-            SendMessage msg;
             currentQuestion.markAllAnswerAsAnswered();
             for (GamePlayer player : baseList) {
-                msg = messages.playerAnswer(
-                        "Раунд окончен. Результаты:\n" + scoreboard.toString() + "\nНовый раунд начнётся через 10 секунд",
+                GameMessage msg = new GameMessage(
                         player.getId(),
-                        currentQuestion
+                        "Раунд окончен. Результаты:\n" + scoreboard.toString() + "\nНовый раунд начнётся через 10 секунд"
                 );
-                sender.sendMessage(msg);
+                sender.updateQuestion(currentQuestion, msg);
             }
             clearChatForAll();
             try {
@@ -159,10 +143,6 @@ interface Round {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            // TODO: 09.11.2021 fixme
-//            observer.onNext(scoreboard);
-//            observer.onComplete();
-//            startNewRound();
             singleObserver.onSuccess(scoreboard);
         }
 
@@ -170,7 +150,7 @@ interface Round {
             if (statistic.checkTryAmount() || checkAnsweredQuestions()) {
                 //round end
                 for (GamePlayer player : playerList) {
-                    new DbMapperAddUserAnswer(db).map(new GamePlayerToUserDbMapper(5).map(player).setExtra(currentQuestion.getId()));
+                    gamePresenter.addUserAnswer(currentQuestion.getId(), player);
                 }
                 roundEndMessage();
             } else {
@@ -179,10 +159,9 @@ interface Round {
             }
         }
 
-        public GameScoreboard finish() {
+        public void finish() {
             activePlayer = null;
             playerList = null;
-            return scoreboard;
         }
 
         private boolean checkAnsweredQuestions() {
@@ -200,25 +179,28 @@ interface Round {
 
         private void sendChatMsgToAll(String from, String text) {
             for (GamePlayer player : baseList) {
-                sender.sendChatMessage(new BotChatMessage(from, text, player.getId()));
+                sender.sendChatMessage(new GameMessage(player.getId(), text, from));
             }
         }
 
         private void sendAll(String text) {
-            SendMessage msg;
             for (GamePlayer player : baseList) {
-                msg = new SendMapperSimpleText().map(new UserMessaged(player.getId(), text));
+                GameMessage msg = new GameMessage(player.getId(), text);
                 sender.sendMessage(msg);
             }
         }
 
-        public void subscribe(SingleObserver<GameScoreboard> observer){
-            new Single<GameScoreboard>(){
+        public void subscribe(SingleObserver<GameScoreboard> observer) {
+            new Single<GameScoreboard>() {
                 @Override
                 protected void subscribeActual(SingleObserver<? super GameScoreboard> observer) {
                     Base.this.singleObserver = (SingleObserver<GameScoreboard>) observer;
                 }
             }.subscribe(observer);
+        }
+
+        public GamePlayer getActivePlayer() {
+            return activePlayer;
         }
     }
 }

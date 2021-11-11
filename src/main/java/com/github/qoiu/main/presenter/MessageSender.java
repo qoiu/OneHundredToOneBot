@@ -1,12 +1,12 @@
 package com.github.qoiu.main.presenter;
 
-import com.github.qoiu.main.bot.BotChatMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import com.github.qoiu.main.Question;
 
 public interface MessageSender {
-    void sendMessage(SendMessage sendMessage);
-    void sendChatMessage(BotChatMessage chatMessage);
+    void sendMessage(GameMessage sendMessage);
+    void sendChatMessage(GameMessage chatMessage);
     void clearChat(long  id);
+    void updateQuestion(Question question, GameMessage message);
 
 
 }

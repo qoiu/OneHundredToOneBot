@@ -6,8 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+interface ScoreboardResults{
+    int getPlayerScores(GamePlayer player);
+}
 
-public interface GameScoreboard {
+public interface GameScoreboard extends ScoreboardResults{
     String getWinnerText();
 
     GamePlayer getWinner();

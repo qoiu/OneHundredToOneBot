@@ -26,7 +26,7 @@ public class SendMapperMainMenu extends SendMapper.Base {
         TelegramBtn btn = new TelegramBtn();
         btn.addColumn("Новая игра", "/newGame");
         btn.addColumn("Присоединиться", "/connecting");
-        btn.addColumn("Участвовать в опросе", "/quiz");
+//        btn.addColumn("Участвовать в опросе", "/quiz");
         return base(userMessaged.getId(),
                 "Привет, рад тебя видеть!\nТы уже готов начать новую игру?",
                 btn);

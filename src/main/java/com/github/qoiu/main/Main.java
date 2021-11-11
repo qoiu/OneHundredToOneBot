@@ -32,6 +32,8 @@ public class Main extends Application {
         });
     }
 
+    // TODO: 01.11.2021 tray
+    //https://ru.stackoverflow.com/questions/457001/Можно-ли-спрятать-javafx-приложение-в-трей
     private static Bot bot;
     private static DatabaseBase db;
 
@@ -63,6 +65,4 @@ public class Main extends Application {
         System.out.println("questions added");
 
     }
-
-
 }

@@ -1,12 +1,15 @@
 package com.github.qoiu.main.presenter;
 
-import com.github.qoiu.main.bot.BotChatMessage;
+import com.github.qoiu.main.Question;
+import com.github.qoiu.main.StateStatus;
 import com.github.qoiu.main.bot.BotInterface;
 import com.github.qoiu.main.bot.BotMessage;
+import com.github.qoiu.main.bot.PreparedSendMessages;
 import com.github.qoiu.main.bot.StateActions;
 import com.github.qoiu.main.data.*;
 import com.github.qoiu.main.data.mappers.*;
 import com.github.qoiu.main.mappers.*;
+import com.github.qoiu.main.presenter.game.GameEngine;
 import com.github.qoiu.main.presenter.game.GamePresenter;
 import com.github.qoiu.main.presenter.mappers.*;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -17,13 +20,17 @@ import java.util.List;
 import static com.github.qoiu.main.StateStatus.*;
 
 public class MainPresenter implements MainPresenterInterface, MessageSender, PlayerNotifier {
+
+
     public MainPresenter(BotInterface bot,
                          DatabaseInterface.Global db) {
         this.bot = bot;
         this.db = db;
+        this.gamePresenter = new GamePresenter(db);
         new DbMapperRestartApp(db).map(null);
         bot.setPresenter(this);
         initMessageMap();
+        messages = new PreparedSendMessages();
     }
 
     private void initMessageMap() {
@@ -34,8 +41,10 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         messageMap.put(PLAYER_WAITING_OTHER_PLAYERS_HOST, new SendMapperCreateGame(db));
     }
 
+    private final PreparedSendMessages messages;
+    private final GamePresenter gamePresenter;
     private final HashMap<Integer, SendMapper> messageMap = new HashMap<>();
-    private final HashMap<Long, GamePresenter> games = new HashMap<>();
+    private final HashMap<Long, GameEngine> games = new HashMap<>();
     private final BotInterface bot;
     private final DatabaseInterface.Global db;
     private final StateActions stateActions = new StateActions();
@@ -89,12 +98,18 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         } else if (!games.containsKey(userMessaged.getId()) || games.get(userMessaged.getId()) == null) {
             GameObject game =
                     new DbMapperGetGameByHostId(db).map(userMessaged.getId());
-            List<GamePlayer> playerList = new PlayersDbToGamePlayersMapper().map(game.getUserInGames());
-            GamePresenter gamePresenter;
-            gamePresenter = new GamePresenter.Base(db, playerList, this);
-            for (GamePlayer player : playerList) {
-                games.put(player.getId(), gamePresenter);
-            }
+            createGame(game);
+
+        }
+    }
+
+    private void createGame(GameObject game){
+        List<GamePlayer> playerList = new PlayersDbToGamePlayersMapper().map(game.getUserInGames());
+        GameEngine gameEngine;
+        gameEngine = new GameEngine.Base(gamePresenter, playerList, this);
+        for (GamePlayer player : playerList) {
+            games.put(player.getId(), gameEngine);
+            new DbMapperUpdateUser(db).map(new GamePlayerToUserDbMapper(StateStatus.PLAYER_IN_GAME).map(player));
         }
     }
 
@@ -141,17 +156,30 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
             new DbMapperAddUser(db).map(new UserMessagedToUserDb(0).map(userMessaged));
     }
 
-    @Override
-    public void sendMessage(SendMessage sendMessage) {
+    private void sendMessage(SendMessage sendMessage){
         bot.sendMessage(sendMessage);
     }
 
-    public void sendChatMessage(BotChatMessage chatMessage) {
-        bot.sendChatMessage(chatMessage);
+    @Override
+    public void sendMessage(GameMessage gameMessage) {
+        sendMessage(new GameMessageToSendMessageMapper().map(gameMessage));
+    }
+
+    @Override
+    public void sendChatMessage(GameMessage gameMessage) {
+        bot.sendChatMessage(new GameMessageToSendChatMessageMapper().map(gameMessage));
     }
 
     @Override
     public void clearChat(long id) {
         bot.clearChat(id);
+    }
+
+    @Override
+    public void updateQuestion(Question question, GameMessage message) {
+        bot.sendMessage(messages.playerAnswer(
+                message.getText(),
+                message.getFrom(),
+                question));
     }
 }
