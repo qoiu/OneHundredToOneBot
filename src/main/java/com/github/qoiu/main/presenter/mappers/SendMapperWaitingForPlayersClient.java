@@ -5,6 +5,7 @@ import com.github.qoiu.main.data.*;
 import com.github.qoiu.main.data.mappers.DbMapperGameIdByPlayerId;
 import com.github.qoiu.main.data.mappers.DbMapperGetGameByGameId;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import static com.github.qoiu.main.StateStatus.*;
 
 public class SendMapperWaitingForPlayersClient extends SendMapper.Base {
     public SendMapperWaitingForPlayersClient(DatabaseInterface.Executor db) {
@@ -23,7 +24,7 @@ public class SendMapperWaitingForPlayersClient extends SendMapper.Base {
                         .append(": готов")
                         .append("\n");
         }
-        btn.addColumn("Отменить", "/menu");
+        btn.addColumn("Отменить", CMD_MENU);
         return base(userMessaged.getId(), players.toString(), btn);
     }
 }

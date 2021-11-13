@@ -37,8 +37,21 @@ public class Question {
         return (int) amount;
     }
 
+    @Override
+    public String toString() {
+        return "Question{" +
+                "id=" + id +
+                ", text='" + text + '\'' +
+                ", answers=" + answers +
+                '}';
+    }
+
     public int getPercentageOfAnswer(int id){
         return getPercentageOfAnswer(answers.get(id));
+    }
+
+    protected void setText(String text) {
+        this.text = text;
     }
 
     public String getText() {

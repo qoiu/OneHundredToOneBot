@@ -2,6 +2,7 @@ package com.github.qoiu.main.bot;
 
 import com.github.qoiu.main.Question;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import static com.github.qoiu.main.StateStatus.*;
 
 public class PreparedSendMessages {
 
@@ -26,7 +27,7 @@ public class PreparedSendMessages {
 
     SendMessage isAlive(String id) {
         TelegramBtn btn = new TelegramBtn();
-        btn.addColumn("Начать", "/menu");
+        btn.addColumn("Начать", CMD_MENU);
         return base(id, "Добро пожаловать.\nЭто бот для игры сто к одному.",btn);
     }
 
@@ -48,7 +49,7 @@ public class PreparedSendMessages {
 
     public SendMessage playerAnswer(String topText, long playerId, Question question){
         TelegramBtn btn = new TelegramBtn();
-        btn.addColumn("Выйти в меню","/leave");
+        btn.addColumn("Выйти в меню",CMD_LEAVE);
         for (Question.Answer answer : question.getAnswers()){
             String text = (answer.isAnswered())?answer.getText()+" "+question.getPercentageOfAnswer(answer)+"%":"***";
             btn.addColumn(text, " ");

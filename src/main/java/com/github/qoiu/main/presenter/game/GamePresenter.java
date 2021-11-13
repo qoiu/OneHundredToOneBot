@@ -6,15 +6,21 @@ import com.github.qoiu.main.data.mappers.*;
 import com.github.qoiu.main.mappers.GamePlayerResultsToUserDbMapper;
 import com.github.qoiu.main.mappers.GamePlayerToUserDbMapper;
 import com.github.qoiu.main.mappers.QuestionDbToQuestionMapper;
+import com.github.qoiu.main.presenter.GameMessage;
 import com.github.qoiu.main.presenter.GamePlayer;
+import com.github.qoiu.main.presenter.MessageSender;
 
 import java.util.Set;
 
+import static com.github.qoiu.main.StateStatus.CMD_MENU;
+
 public class GamePresenter implements GameActions{
     private final DatabaseInterface.Executor db;
+    private final  MessageSender sender;
 
-    public GamePresenter(DatabaseInterface.Executor db) {
+    public GamePresenter(DatabaseInterface.Executor db, MessageSender sender) {
         this.db = db;
+        this.sender = sender;
     }
 
     @Override
@@ -45,6 +51,11 @@ public class GamePresenter implements GameActions{
 
     @Override
     public void updateUserResult(GameScoreboard results, GamePlayer player) {
+        sender.clearChat(player.getId());
+        String text = results.getWinnerText() + "\nИгра завершена\n";
+        GameMessage msg = new GameMessage(player.getId(),text + results);
+        msg.addButton("В меню", CMD_MENU);
+        sender.sendMessage(msg);
             int win = 0;
             if (player == results.getWinner()) win = 1;
                 new DbMapperUpdateUserResults(db).map(

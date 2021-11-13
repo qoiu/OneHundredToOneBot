@@ -16,13 +16,17 @@ public class StateActions {
   }
 
     private void initCallback(){
-        mapCallback.put("/start",PLAYER_WAITING_ACTION);
-        mapCallback.put("/menu",PLAYER_WAITING_ACTION);
-        mapCallback.put("/newGame",PLAYER_WAITING_OTHER_PLAYERS_HOST);
-        mapCallback.put("/connecting",PLAYER_CHOSE_GAME);
-        mapCallback.put("/connect",PLAYER_WAITING_OTHER_PLAYERS);
-        mapCallback.put("/startGame",PLAYER_IN_GAME);
-        mapCallback.put("/base",PLAYER_BASE_STATUS);//you get it when parse of command throw NumberFormatException
+        mapCallback.put(CMD_START,PLAYER_WAITING_ACTION);
+        mapCallback.put(CMD_MENU,PLAYER_WAITING_ACTION);
+        mapCallback.put(CMD_NEW_GAME,PLAYER_WAITING_OTHER_PLAYERS_HOST);
+        mapCallback.put(CMD_CONNECTING,PLAYER_CHOSE_GAME);
+        mapCallback.put(CMD_CONNECT,PLAYER_WAITING_OTHER_PLAYERS);
+        mapCallback.put(CMD_START_GAME,PLAYER_IN_GAME);
+        mapCallback.put(CMD_BASE,PLAYER_BASE_STATUS);//you get it when parse of command throw NumberFormatException
+        mapCallback.put(CMD_ADD_QUESTION,PLAYER_ADD_QUESTION);
+        mapCallback.put(CMD_ANSWER,PLAYER_ADD_QUESTION);
+        mapCallback.put(CMD_EDIT_QUESTION,PLAYER_EDIT_QUESTION);
+        mapCallback.put(CMD_SAVE_QUESTION,PLAYER_SAVE_QUESTION);
     }
 
     public void initMessages(){

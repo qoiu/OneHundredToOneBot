@@ -7,6 +7,7 @@ import com.github.qoiu.main.data.mappers.DbMapperDeletePlayer;
 import com.github.qoiu.main.data.mappers.DbMapperGameIdByPlayerId;
 import com.github.qoiu.main.presenter.PlayerNotifier;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import static com.github.qoiu.main.StateStatus.*;
 
 public class SendMapperMainMenu extends SendMapper.Base {
     PlayerNotifier notifier;
@@ -24,9 +25,10 @@ public class SendMapperMainMenu extends SendMapper.Base {
             notifier.notifyGamePlayersChanged(game);
         }
         TelegramBtn btn = new TelegramBtn();
-        btn.addColumn("Новая игра", "/newGame");
-        btn.addColumn("Присоединиться", "/connecting");
-//        btn.addColumn("Участвовать в опросе", "/quiz");
+        btn.addColumn("Новая игра", CMD_NEW_GAME);
+        btn.addColumn("Присоединиться", CMD_CONNECTING);
+        btn.addColumn("Задать свой вопрос", CMD_ADD_QUESTION);
+        btn.addColumn("Проголосовать за вопрос", CMD_ADD_QUESTION);
         return base(userMessaged.getId(),
                 "Привет, рад тебя видеть!\nТы уже готов начать новую игру?",
                 btn);

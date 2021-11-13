@@ -5,9 +5,11 @@ import com.github.qoiu.main.data.DatabaseInterface;
 import com.github.qoiu.main.data.GameObject;
 import com.github.qoiu.main.data.UserMessaged;
 import com.github.qoiu.main.data.mappers.DbMapperAllGames;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.*;
 
 import java.util.List;
+
+import static com.github.qoiu.main.StateStatus.*;
 
 public class SendMapperListOfGames extends SendMapper.Base{
     public SendMapperListOfGames(DatabaseInterface.Executor db) {
@@ -20,13 +22,13 @@ public class SendMapperListOfGames extends SendMapper.Base{
         TelegramBtn btn = new TelegramBtn();
         if(games.size()>0){
             for (GameObject game:games) {
-                btn.addColumn(game.getName(),"/connect:"+game.getId());
+                btn.addColumn(game.getName(),CMD_CONNECT+":"+game.getId());
             }
-            btn.addColumn("Меню","/menu");
+            btn.addColumn("Меню",CMD_MENU);
             return base(userMessaged.getId(), "Список игр:",btn);
         }else {
-            btn.addColumn("Новая игра", "/newGame");
-            btn.addColumn("Меню","/menu");
+            btn.addColumn("Новая игра", CMD_NEW_GAME);
+            btn.addColumn("Меню",CMD_MENU);
             return base(userMessaged.getId(), "Нет начатых игр. \nБудьте первым!",btn);
         }
     }

@@ -89,6 +89,9 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
             users.add(user.getId());
             presenter.receiveMessage(new BotUserToUserMessagedMapper.Base().map(user, message.getText()));
             history.add(message);
+            if (message.getText().startsWith("/")) {
+                presenter.receiveCallback(new BotUserToUserMessagedMapper.Base().map(user,message.getText()));
+            }
             deleteMsg(message);
         } else if (update.hasCallbackQuery()) {
             CallbackQuery query = update.getCallbackQuery();
