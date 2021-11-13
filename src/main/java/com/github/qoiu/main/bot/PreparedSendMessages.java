@@ -21,13 +21,13 @@ public class PreparedSendMessages {
     }
 
     SendMessage botDown(String id) {
-        return base(id, "Something went wrong\n\nBot disconnected");
+        return base(id, "Бот устал и отдыхает");
     }
 
     SendMessage isAlive(String id) {
         TelegramBtn btn = new TelegramBtn();
-        btn.addColumn("Hello", "/menu");
-        return base(id, "Bot is ready!\nWaiting for your commands",btn);
+        btn.addColumn("Начать", "/menu");
+        return base(id, "Добро пожаловать.\nЭто бот для игры сто к одному.",btn);
     }
 
     SendMessage connectionError(String id) {

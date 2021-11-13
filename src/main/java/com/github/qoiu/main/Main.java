@@ -2,14 +2,11 @@ package com.github.qoiu.main;
 
 import com.github.qoiu.main.bot.Bot;
 import com.github.qoiu.main.data.DatabaseBase;
-import com.github.qoiu.main.data.QuestionDb;
 import com.github.qoiu.main.data.mappers.DbMapperAddQuestion;
 import com.github.qoiu.main.mappers.QuestionsToQuestionDbMapper;
 import com.github.qoiu.main.presenter.MainPresenter;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -23,21 +20,17 @@ public class Main extends Application {
         primaryStage.setTitle("100 to 1");
         primaryStage.setWidth(200);
         primaryStage.setHeight(200);
-        primaryStage.show();
-        primaryStage.setOnHiding(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                new IllegalStateException("Closing App");
-            }
-        });
+        JavaFXTrayIconSample jtray = new JavaFXTrayIconSample(
+                new JavaFXTrayIconSample.TrayBtn("AddQuestions", e -> addQuestions()),
+                new JavaFXTrayIconSample.TrayBtn("Exit", e -> stop())
+        );
+        jtray.start(primaryStage);
     }
 
-    // TODO: 01.11.2021 tray
-    //https://ru.stackoverflow.com/questions/457001/Можно-ли-спрятать-javafx-приложение-в-трей
     private static Bot bot;
     private static DatabaseBase db;
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         bot = new Bot(new OutputReader().read());
         try {
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
@@ -51,15 +44,19 @@ public class Main extends Application {
     }
 
     @Override
-    public void stop() throws Exception {
+    public void stop()  {
         bot.onClosing();
-        super.stop();
+        try {
+            super.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.exit(0);
     }
 
-    private static void addQuestions(QuestionDb dbQuestions){
+    private static void addQuestions() {
         List<Question> questions = new InputVocReader("100 к 1 ответы на вопрос:", "end").read();
-        for (Question question:questions) {
+        for (Question question : questions) {
             new DbMapperAddQuestion(db).map(new QuestionsToQuestionDbMapper().map(question));
         }
         System.out.println("questions added");
