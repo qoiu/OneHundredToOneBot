@@ -20,11 +20,10 @@ public class Main extends Application {
         primaryStage.setTitle("100 to 1");
         primaryStage.setWidth(200);
         primaryStage.setHeight(200);
-        JavaFXTrayIconSample jtray = new JavaFXTrayIconSample(
+        new JavaFXTrayIconSample(
                 new JavaFXTrayIconSample.TrayBtn("AddQuestions", e -> addQuestions()),
                 new JavaFXTrayIconSample.TrayBtn("Exit", e -> stop())
-        );
-        jtray.start(primaryStage);
+        ).start(primaryStage);
     }
 
     private static Bot bot;
