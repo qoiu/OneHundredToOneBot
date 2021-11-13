@@ -18,6 +18,11 @@ public class QuestionTemplate extends Question {
         this.author = userMessaged.getName();
     }
 
+    public QuestionTemplate(String text, int id, long authorId) {
+        super(text, id);
+        this.authorId = authorId;
+    }
+
     public long getAuthorId() {
         return authorId;
     }

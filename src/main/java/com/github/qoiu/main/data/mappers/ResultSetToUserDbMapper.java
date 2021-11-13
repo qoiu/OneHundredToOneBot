@@ -5,7 +5,7 @@ import com.github.qoiu.main.data.UserDb;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ResultSetToUserDbMapper extends DbMapper.Result<UserDb, ResultSet> {
+public class ResultSetToUserDbMapper extends DbMapper.Result<UserDb> {
 
     public ResultSetToUserDbMapper(String sql) {
         super(sql);

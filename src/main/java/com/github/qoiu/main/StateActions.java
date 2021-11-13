@@ -1,4 +1,4 @@
-package com.github.qoiu.main.bot;
+package com.github.qoiu.main;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +27,8 @@ public class StateActions {
         mapCallback.put(CMD_ANSWER,PLAYER_ADD_QUESTION);
         mapCallback.put(CMD_EDIT_QUESTION,PLAYER_EDIT_QUESTION);
         mapCallback.put(CMD_SAVE_QUESTION,PLAYER_SAVE_QUESTION);
+        mapCallback.put(CMD_VOTE,PLAYER_VOTE);
+        mapCallback.put(CMD_PLAYER_VOTE,PLAYER_VOTE);
     }
 
     public void initMessages(){
@@ -35,7 +37,7 @@ public class StateActions {
 
     public Integer actionCallback(String command){
         command=command.split(":")[0];
-        return mapCallback.containsKey(command)?mapCallback.get(command):PLAYER_BASE_STATUS;
+        return mapCallback.getOrDefault(command, PLAYER_BASE_STATUS);
     }
 
 }

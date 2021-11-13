@@ -10,6 +10,7 @@ public class StateStatus {
     public static final int PLAYER_ADD_QUESTION = 10;
     public static final int PLAYER_EDIT_QUESTION = 11;
     public static final int PLAYER_SAVE_QUESTION = 12;
+    public static final int PLAYER_VOTE = 20;
 
     public static final String CMD_START = "/start";
     public static final String CMD_MENU = "/menu";
@@ -25,6 +26,7 @@ public class StateStatus {
     public static final String CMD_REMOVE = "/remove";
     public static final String CMD_LEAVE = "/leave";
     public static final String CMD_VOTE = "/vote";
+    public static final String CMD_PLAYER_VOTE = "/voteFor";
 
 
     public static final int USER_NOT_IN_GAME = 0;

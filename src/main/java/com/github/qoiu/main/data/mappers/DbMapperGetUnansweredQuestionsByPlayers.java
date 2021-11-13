@@ -25,7 +25,6 @@ public class DbMapperGetUnansweredQuestionsByPlayers extends DbMapper.Base<Set<I
         String sql = "SELECT questions.id AS qId, questionAnswered.questionId, questionAnswered.userId" +
                 " AS user FROM questions  LEFT JOIN questionAnswered ON qId = questionId ";
         if (!extra.toString().equals("")) sql += "AND (" + extra + ")";
-        System.out.println(sql);
         ResultSet rs = db.executeQuery(sql);
         Set<Integer> set = new HashSet<>();
         try {
@@ -34,6 +33,7 @@ public class DbMapperGetUnansweredQuestionsByPlayers extends DbMapper.Base<Set<I
                     set.add(rs.getInt("qId"));
             }
         } catch (SQLException e) {
+            System.out.println(sql);
             e.printStackTrace();
         }
 //        Question question = new DbMQ

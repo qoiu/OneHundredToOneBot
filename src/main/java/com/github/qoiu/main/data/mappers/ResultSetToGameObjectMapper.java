@@ -5,7 +5,7 @@ import com.github.qoiu.main.data.GameObject;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ResultSetToGameObjectMapper extends DbMapper.Result<GameObject, ResultSet> {
+public class ResultSetToGameObjectMapper extends DbMapper.Result<GameObject> {
 
     public ResultSetToGameObjectMapper(String sql) {
         super(sql);
