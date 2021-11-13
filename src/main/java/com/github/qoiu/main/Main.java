@@ -9,6 +9,7 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.generics.BotSession;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.util.List;
@@ -28,22 +29,61 @@ public class Main extends Application {
 
     private static Bot bot;
     private static DatabaseBase db;
+    private static TelegramBotsApi api;
+    private static BotSession session;
+    private static MainPresenter presenter;
 
     public static void main(String... args) {
-        bot = new Bot(new OutputReader().read());
         try {
-            TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
-            api.registerBot(bot);
+            api = new TelegramBotsApi(DefaultBotSession.class);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
         db = new DatabaseBase("jdbc:sqlite:game.db");
-        new MainPresenter(bot, db);
+        presenter = new MainPresenter(db);
+        startBot();
+        new Thread(Main::reconnected).start();
         launch(args);
     }
 
+    private static void startBot() {
+        try {
+            bot = new Bot(new OutputReader().read());
+            if (session != null && session.isRunning()) session.stop();
+            session = api.registerBot(bot);
+            presenter.setBot(bot);
+            System.out.println("Bot: started");
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+            bot=null;
+        }
+    }
+
+    private static void reconnected() {
+        while (true) {
+            try {
+                Thread.sleep(4_000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (bot == null) {
+                startBot();
+                System.out.println("Bot: trying to reconnect");
+            } else {
+                try {
+                    bot.getMe();
+                } catch (NullPointerException ignored) {
+                } catch (TelegramApiException e) {
+                    bot=null;
+                    presenter.lostConnection();
+                }
+            }
+        }
+    }
+
     @Override
-    public void stop()  {
+    public void stop() {
+        bot.clearChat();
         bot.onClosing();
         try {
             super.stop();

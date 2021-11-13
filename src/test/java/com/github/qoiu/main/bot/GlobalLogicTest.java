@@ -53,7 +53,8 @@ public class GlobalLogicTest {
     public static void init(){
         db = new DatabaseBase("jdbc:sqlite:test.db");
         db.clearDatabase();
-        presenter = new MainPresenter(bot,db);
+        presenter = new MainPresenter(db);
+        presenter.setBot(bot);
     }
 
     @Test

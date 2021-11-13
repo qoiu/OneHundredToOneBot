@@ -16,19 +16,16 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import static com.github.qoiu.main.StateStatus.*;
 
 public class MainPresenter implements MainPresenterInterface, MessageSender, PlayerNotifier {
 
 
-    public MainPresenter(BotInterface bot,
-                         DatabaseInterface.Global db) {
-        this.bot = bot;
+    public MainPresenter(DatabaseInterface.Global db) {
         this.db = db;
         this.gamePresenter = new GamePresenter(db);
-        new DbMapperRestartApp(db).map(null);
-        bot.setPresenter(this);
         initMessageMap();
         messages = new PreparedSendMessages();
     }
@@ -39,13 +36,15 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         messageMap.put(PLAYER_CHOSE_GAME, new SendMapperListOfGames(db));
         messageMap.put(PLAYER_WAITING_OTHER_PLAYERS, new SendMapperAddPlayerToGame(db, this));
         messageMap.put(PLAYER_WAITING_OTHER_PLAYERS_HOST, new SendMapperCreateGame(db));
+        messageMap.put(PLAYER_ADD_QUESTION, new SendMapperAddQuestion(questionTemplate));
     }
 
     private final PreparedSendMessages messages;
     private final GamePresenter gamePresenter;
     private final HashMap<Integer, SendMapper> messageMap = new HashMap<>();
     private final HashMap<Long, GameEngine> games = new HashMap<>();
-    private final BotInterface bot;
+    private final HashMap<Long, QuestionTemplate> questionTemplate = new HashMap<>();
+    private BotInterface bot;
     private final DatabaseInterface.Global db;
     private final StateActions stateActions = new StateActions();
 
@@ -53,6 +52,11 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
     public List<BotMessage> getDisconnectedMessages() {
         return new MessagesDbToBotMessagesMapper().map(
                 new DbMapperGetDisconnectedMessages(db).map(null));
+    }
+
+    @Override
+    public Set<Long> getAllUsers() {
+        return new DbMapperGetAllUsersId(db).map(null);
     }
 
     @Override
@@ -103,7 +107,7 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         }
     }
 
-    private void createGame(GameObject game){
+    private void createGame(GameObject game) {
         List<GamePlayer> playerList = new PlayersDbToGamePlayersMapper().map(game.getUserInGames());
         GameEngine gameEngine;
         gameEngine = new GameEngine.Base(gamePresenter, playerList, this);
@@ -181,5 +185,22 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
                 message.getText(),
                 message.getFrom(),
                 question));
+    }
+
+    public void setBot(BotInterface bot) {
+        this.bot = bot;
+        bot.setPresenter(this);
+    }
+
+    public void lostConnection(){
+        new DbMapperRestartApp(db).map(null);
+        for (Long id:games.keySet()) {
+            if(games.get(id)!=null) {
+                games.get(id).playerLeaveGame(new UserMessaged(id, "somePlayer"));
+                games.put(id,null);
+            }
+        }
+        games.clear();
+        questionTemplate.clear();
     }
 }

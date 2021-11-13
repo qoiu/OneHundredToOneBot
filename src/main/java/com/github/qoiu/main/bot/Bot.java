@@ -18,7 +18,7 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
 
     private final HashMap<String, Message> savedMessage = new HashMap<>();
     private BotChatForPlayer chat;
-    private final Set<Long> users = new HashSet<>();
+    private Set<Long> users = new HashSet<>();
     private final List<Message> history = new LinkedList<>();
     private MainPresenterInterface presenter;
     private String token;
@@ -33,14 +33,15 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
         super(options);
     }
 
-    @Override
-    public void onClosing() {
-        for (Message message : history) {
-            deleteMsg(message);
+    public void clearChat(){
+        if(history.size()>0)
+        for (int i = 0; i <history.size() ; i++) {
+            deleteMsg(history.get(i));
         }
         PreparedSendMessages messages = new PreparedSendMessages();
-        for (Long user : users) {
-            clearChat(user);
+        List<Long> list= new ArrayList<>(Arrays.asList(users.toArray(new Long[0]))) ;
+        for (int i = 0; i < list.size(); i++) {
+            Long user = list.get(i);
             try {
                 Message sent = execute(messages.botDown(String.valueOf(user)));
                 presenter.saveMsg(new BotMessage(sent.getChatId(), sent.getMessageId()));
@@ -48,7 +49,9 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
                 e.printStackTrace();
             }
         }
-        super.onClosing();
+        for (Long user : list) {
+            clearChat(user);
+        }
     }
 
     @Override
@@ -56,7 +59,6 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
         this.presenter = presenter;
         for (BotMessage elem : presenter.getDisconnectedMessages()) {
             presenter.deletedMsg(elem);
-            users.add(elem.getChatId());
             DeleteMessage deleteMessage = new DeleteMessage();
             deleteMessage.setChatId(String.valueOf(elem.getChatId()));
             deleteMessage.setMessageId(elem.getMessageId());
@@ -66,6 +68,7 @@ public class Bot extends TelegramLongPollingBot implements BotInterface {
             }
         }
         PreparedSendMessages sendMessages = new PreparedSendMessages();
+        users = presenter.getAllUsers();
         for (Long id : users) {
             sendMessage(sendMessages.isAlive(String.valueOf(id)));
         }
