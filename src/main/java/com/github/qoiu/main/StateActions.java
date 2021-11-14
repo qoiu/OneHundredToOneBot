@@ -29,6 +29,7 @@ public class StateActions {
         mapCallback.put(CMD_SAVE_QUESTION,PLAYER_SAVE_QUESTION);
         mapCallback.put(CMD_VOTE,PLAYER_VOTE);
         mapCallback.put(CMD_PLAYER_VOTE,PLAYER_VOTE);
+        mapCallback.put(CMD_HIGHSCORE,PLAYER_HIGHSCOE);
     }
 
     public void initMessages(){

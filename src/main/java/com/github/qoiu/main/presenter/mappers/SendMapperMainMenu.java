@@ -29,6 +29,7 @@ public class SendMapperMainMenu extends SendMapper.Base {
         btn.addColumn("Присоединиться", CMD_CONNECTING);
         btn.addColumn("Задать свой вопрос", CMD_ADD_QUESTION);
         btn.addColumn("Проголосовать за вопрос", CMD_VOTE);
+        btn.addColumn("Рекорды", CMD_HIGHSCORE);
         return base(userMessaged.getId(),
                 "Привет, рад тебя видеть!\nТы уже готов начать новую игру?",
                 btn);

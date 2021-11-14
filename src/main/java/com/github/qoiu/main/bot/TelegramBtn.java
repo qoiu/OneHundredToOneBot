@@ -1,6 +1,5 @@
 package com.github.qoiu.main.bot;
 
-import javafx.util.Pair;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
@@ -11,16 +10,35 @@ public class TelegramBtn {
 
     private final List<List<InlineKeyboardButton>> columns = new ArrayList<>();
 
-    void addRow(Pair<String,String>...btn){
+    public void addRow(Btn...btn){
         List<InlineKeyboardButton> buttons = new ArrayList<>();
-        for (Pair<String,String> button:btn) {
+        for (Btn button:btn) {
             buttons.add(
                     InlineKeyboardButton.builder()
-                            .text(button.getKey())
-                            .callbackData(button.getValue())
+                            .text(button.getText())
+                            .callbackData(button.getCommand())
                             .build());
         }
         columns.add(buttons);
+
+    }
+
+    public class Btn{
+        public Btn(String text, String command) {
+            this.text = text;
+            this.command = command;
+        }
+
+        final String text;
+        final String command;
+
+        public String getText() {
+            return text;
+        }
+
+        public String getCommand() {
+            return command;
+        }
     }
 
     public void addColumn(String text, String callback){

@@ -30,6 +30,7 @@ public class PresenterTables implements MainPresenterHashTables.Global {
         messageMap.put(PLAYER_ADD_QUESTION, new SendMapperEditQuestion(questionTemplate));
         messageMap.put(PLAYER_EDIT_QUESTION, new SendMapperQuestionChangeTitle(questionTemplate));
         messageMap.put(PLAYER_VOTE, new SendMapperVoteQuestion(db,this));
+        messageMap.put(PLAYER_HIGHSCOE, new SendMapperHighscore(db));
     }
 
     @Override
