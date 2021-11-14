@@ -5,7 +5,7 @@ import com.github.qoiu.main.StateStatus;
 import com.github.qoiu.main.bot.BotInterface;
 import com.github.qoiu.main.bot.BotMessage;
 import com.github.qoiu.main.bot.PreparedSendMessages;
-import com.github.qoiu.main.bot.StateActions;
+import com.github.qoiu.main.StateActions;
 import com.github.qoiu.main.data.*;
 import com.github.qoiu.main.data.mappers.*;
 import com.github.qoiu.main.mappers.*;
@@ -16,35 +16,27 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 import static com.github.qoiu.main.StateStatus.*;
 
 public class MainPresenter implements MainPresenterInterface, MessageSender, PlayerNotifier {
 
 
-    public MainPresenter(DatabaseInterface.Global db) {
+    public MainPresenter(BotInterface bot,
+                         DatabaseInterface.Global db) {
+        this.bot = bot;
         this.db = db;
-        this.gamePresenter = new GamePresenter(db);
-        initMessageMap();
+        this.gamePresenter = new GamePresenter(db,this);
+        new DbMapperRestartApp(db).map(null);
+        tables = new PresenterTables(db,this);
+        bot.setPresenter(this);
         messages = new PreparedSendMessages();
     }
 
-    private void initMessageMap() {
-        messageMap.put(PLAYER_BASE_STATUS, new SendMapperMainMenu(db, this));
-        messageMap.put(PLAYER_WAITING_ACTION, new SendMapperMainMenu(db, this));
-        messageMap.put(PLAYER_CHOSE_GAME, new SendMapperListOfGames(db));
-        messageMap.put(PLAYER_WAITING_OTHER_PLAYERS, new SendMapperAddPlayerToGame(db, this));
-        messageMap.put(PLAYER_WAITING_OTHER_PLAYERS_HOST, new SendMapperCreateGame(db));
-        messageMap.put(PLAYER_ADD_QUESTION, new SendMapperAddQuestion(questionTemplate));
-    }
-
+    private final MainPresenterHashTables.Global tables;
     private final PreparedSendMessages messages;
     private final GamePresenter gamePresenter;
-    private final HashMap<Integer, SendMapper> messageMap = new HashMap<>();
-    private final HashMap<Long, GameEngine> games = new HashMap<>();
-    private final HashMap<Long, QuestionTemplate> questionTemplate = new HashMap<>();
-    private BotInterface bot;
+    private final BotInterface bot;
     private final DatabaseInterface.Global db;
     private final StateActions stateActions = new StateActions();
 
@@ -72,16 +64,25 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
     public void receiveMessage(UserMessaged userMessaged) {
         checkForNewUsers(userMessaged);
         int status = new DbMapperGetUserById(db).map(userMessaged.getId()).getStatusId();
-        if (userMessaged.getMessage().startsWith("/")) {
-            status = stateActions.actionCallback(userMessaged.getMessage());
-            new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
-            SendMessage sendMessage = null;
-            if (messageMap.containsKey(status))
-                sendMessage = messageMap.get(status).map(userMessaged);
-            if (sendMessage != null) sendMessage(sendMessage);
-        }
-        if (status == PLAYER_IN_GAME) {
-            games.get(userMessaged.getId()).getChatMessage(userMessaged);
+        switch (status) {
+            case PLAYER_IN_GAME:
+                tables.getGame(userMessaged.getId()).getChatMessage(userMessaged);
+                break;
+            case PLAYER_ADD_QUESTION:
+                tables.getEditedQuestion(userMessaged.getId()).addAnswer(userMessaged.getMessage());
+                sendMessage(tables.getSendMsg(PLAYER_ADD_QUESTION).map(userMessaged));
+                break;
+            case PLAYER_VOTE:
+                new DbMapperAddUserQuestionAnswer(db,tables.getCurrentQuestion(userMessaged.getId())).map(userMessaged.getMessage());
+                sendMessage(tables.getSendMsg(PLAYER_VOTE).map(userMessaged));
+                break;
+            case PLAYER_EDIT_QUESTION:
+                tables.getEditedQuestion(userMessaged.getId()).setTitle(userMessaged.getMessage());
+                sendMessage(tables.getSendMsg(PLAYER_ADD_QUESTION).map(userMessaged));
+                new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(PLAYER_ADD_QUESTION).map(userMessaged));
+                break;
+            default:
+                tables.getSendMsg(PLAYER_BASE_STATUS);
         }
     }
 
@@ -89,25 +90,35 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
     public void receiveCallback(UserMessaged userMessaged) {
         int status = stateActions.actionCallback(userMessaged.getMessage());
         new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
-        if (status != PLAYER_IN_GAME) {
-            if (games.containsKey(userMessaged.getId()) && games.get(userMessaged.getId()) != null) {
-                games.get(userMessaged.getId()).playerLeaveGame(userMessaged);
-                games.put(userMessaged.getId(), null);
-            }
-            SendMessage sendMessage = null;
-            if (messageMap.containsKey(status))
-                sendMessage = messageMap.get(status).map(userMessaged);
-            if (sendMessage != null) sendMessage(sendMessage);
-            new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
-        } else if (!games.containsKey(userMessaged.getId()) || games.get(userMessaged.getId()) == null) {
-            GameObject game =
-                    new DbMapperGetGameByHostId(db).map(userMessaged.getId());
-            createGame(game);
-
+        switch (status) {
+            case PLAYER_IN_GAME:
+                if (!tables.isGameExist(userMessaged.getId())) {
+                    GameObject game =
+                            new DbMapperGetGameByHostId(db).map(userMessaged.getId());
+                    createGame(game);
+                }
+                break;
+            case PLAYER_SAVE_QUESTION:
+                new DbMapperAddUserQuestion(db).map(tables.getEditedQuestion(userMessaged.getId()));
+                new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(PLAYER_WAITING_ACTION).map(userMessaged));
+                sendMessage(tables.getSendMsg(status).map(userMessaged));
+                break;
+            case PLAYER_ADD_QUESTION:
+                tables.setQuestionTemplate(userMessaged.getId(), new QuestionTemplate(userMessaged));
+            default:
+                if (tables.isGameExist(userMessaged.getId())) {
+                    tables.getGame(userMessaged.getId()).playerLeaveGame(userMessaged);
+                    tables.setGameEngine(userMessaged.getId(),null);
+                }
+                SendMessage sendMessage = null;
+                if (tables.isMsgExist(status))
+                    sendMessage = tables.getSendMsg(status).map(userMessaged);
+                if (sendMessage != null) sendMessage(sendMessage);
+                new DbMapperUpdateUser(db).map(new UserMessagedToUserDb(status).map(userMessaged));
         }
     }
 
-    private void createGame(GameObject game) {
+    private void createGame(GameObject game){
         List<GamePlayer> playerList = new PlayersDbToGamePlayersMapper().map(game.getUserInGames());
         GameEngine gameEngine;
         gameEngine = new GameEngine.Base(gamePresenter, playerList, this);

@@ -5,7 +5,7 @@ import com.github.qoiu.main.data.PlayerDb;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ResultSetToUserInGameDbMapper extends DbMapper.Result<PlayerDb, ResultSet> {
+public class ResultSetToUserInGameDbMapper extends DbMapper.Result<PlayerDb> {
 
     public ResultSetToUserInGameDbMapper(String sql) {
         super(sql);

@@ -74,12 +74,7 @@ public interface GameEngine {
 
         private void gameEnd() {
             sendAll("Игра окончена");
-            String text = scoreboard.getWinnerText() + "\nИгра завершена\n";
             for (GamePlayer player : list) {
-                sender.clearChat(player.getId());
-                GameMessage msg = new GameMessage(player.getId(),text + scoreboard);
-                msg.addButton("В меню", "/menu");
-                sender.sendMessage(msg);
                 gamePresenter.updateUserResult(scoreboard,player);
             }
         }
@@ -92,14 +87,7 @@ public interface GameEngine {
         }
 
         public void getChatMessage(UserMessaged userMessaged) {
-            String text = userMessaged.getMessage();
             GamePlayer player =  new UserMessagedToGamePlayer().map(userMessaged);
-            if (text.equals("/leave")) {
-                GameMessage msg = new GameMessage(player.getId(),"Очень жаль");
-                msg.addButton("В меню", "/menu");
-                sender.sendMessage(msg);
-                playerLeaveGame(userMessaged);
-            }
             if (current.isActivePlayer(player)) {
                 if (userMessaged.getMessage().charAt(0) != '?') {
                     current.checkAnswer(userMessaged.getMessage());

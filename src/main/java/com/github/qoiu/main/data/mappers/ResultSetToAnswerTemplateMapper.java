@@ -1,26 +1,25 @@
 package com.github.qoiu.main.data.mappers;
 
-import com.github.qoiu.main.data.QuestionDb;
+import com.github.qoiu.main.presenter.QuestionTemplate;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ResultSetToAnswerMapper extends DbMapper.Result<QuestionDb> {
-    private final QuestionDb question;
+public class ResultSetToAnswerTemplateMapper extends DbMapper.Result<QuestionTemplate> {
+    private final QuestionTemplate question;
 
-    public ResultSetToAnswerMapper(QuestionDb questionDb,String sql) {
+    public ResultSetToAnswerTemplateMapper(QuestionTemplate questionDb, String sql) {
         super(sql);
         this.question = questionDb;
     }
 
-
     @Override
-    public QuestionDb map(ResultSet set) {
+    public QuestionTemplate map(ResultSet set) {
 
         try {
             int rate = set.getInt("rate");
             String text = set.getString("text");
-            question.new Answer(text,rate);
+            question.new Answer(text, rate);
             return question;
         } catch (SQLException e) {
             return exception(e);
