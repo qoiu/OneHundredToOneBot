@@ -1,42 +1,41 @@
 package com.github.qoiu.main.presenter;
 
 import com.github.qoiu.main.Question;
+import com.github.qoiu.main.StateActions;
 import com.github.qoiu.main.StateStatus;
 import com.github.qoiu.main.bot.BotInterface;
 import com.github.qoiu.main.bot.BotMessage;
 import com.github.qoiu.main.bot.PreparedSendMessages;
-import com.github.qoiu.main.StateActions;
 import com.github.qoiu.main.data.*;
 import com.github.qoiu.main.data.mappers.*;
 import com.github.qoiu.main.mappers.*;
 import com.github.qoiu.main.presenter.game.GameEngine;
 import com.github.qoiu.main.presenter.game.GamePresenter;
-import com.github.qoiu.main.presenter.mappers.*;
+import com.github.qoiu.main.presenter.mappers.SendMapperGameCancelledClient;
+import com.github.qoiu.main.presenter.mappers.SendMapperWaitingForPlayersClient;
+import com.github.qoiu.main.presenter.mappers.SendMapperWaitingForPlayersHost;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import static com.github.qoiu.main.StateStatus.*;
 
 public class MainPresenter implements MainPresenterInterface, MessageSender, PlayerNotifier {
 
 
-    public MainPresenter(BotInterface bot,
-                         DatabaseInterface.Global db) {
-        this.bot = bot;
+    public MainPresenter(DatabaseInterface.Global db) {
         this.db = db;
         this.gamePresenter = new GamePresenter(db,this);
         new DbMapperRestartApp(db).map(null);
         tables = new PresenterTables(db,this);
-        bot.setPresenter(this);
         messages = new PreparedSendMessages();
     }
 
     private final MainPresenterHashTables.Global tables;
     private final PreparedSendMessages messages;
     private final GamePresenter gamePresenter;
-    private final BotInterface bot;
+    private BotInterface bot;
     private final DatabaseInterface.Global db;
     private final StateActions stateActions = new StateActions();
 
@@ -123,7 +122,7 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
         GameEngine gameEngine;
         gameEngine = new GameEngine.Base(gamePresenter, playerList, this);
         for (GamePlayer player : playerList) {
-            games.put(player.getId(), gameEngine);
+            tables.setGameEngine(player.getId(), gameEngine);
             new DbMapperUpdateUser(db).map(new GamePlayerToUserDbMapper(StateStatus.PLAYER_IN_GAME).map(player));
         }
     }
@@ -205,13 +204,13 @@ public class MainPresenter implements MainPresenterInterface, MessageSender, Pla
 
     public void lostConnection(){
         new DbMapperRestartApp(db).map(null);
-        for (Long id:games.keySet()) {
-            if(games.get(id)!=null) {
-                games.get(id).playerLeaveGame(new UserMessaged(id, "somePlayer"));
-                games.put(id,null);
+        for (Long id:tables.getGameSet()) {
+            if(tables.getGame(id)!=null) {
+                tables.getGame(id).playerLeaveGame(new UserMessaged(id, "somePlayer"));
+                tables.setGameEngine(id,null);
             }
         }
-        games.clear();
-        questionTemplate.clear();
+        tables.clearGames();
+        tables.clearQuestionTemplate();
     }
 }

@@ -3,10 +3,14 @@ package com.github.qoiu.main.presenter;
 import com.github.qoiu.main.presenter.game.GameEngine;
 import com.github.qoiu.main.presenter.mappers.SendMapper;
 
+import java.util.Set;
+
 public interface MainPresenterHashTables{
     interface GameEngineTable{
         GameEngine getGame(long playerId);
         boolean isGameExist(long playerId);
+        Set<Long> getGameSet();
+        void clearGames();
         void setGameEngine(long playerId, GameEngine engine);
     }
 
@@ -18,6 +22,7 @@ public interface MainPresenterHashTables{
     interface QuestionTemplateTable{
         QuestionTemplate getEditedQuestion(long playerId);
         void setQuestionTemplate(long playerId, QuestionTemplate question);
+        void clearQuestionTemplate();
     }
 
     interface CurrentQuestion{

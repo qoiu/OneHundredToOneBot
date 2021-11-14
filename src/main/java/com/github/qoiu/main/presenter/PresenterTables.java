@@ -5,6 +5,7 @@ import com.github.qoiu.main.presenter.game.GameEngine;
 import com.github.qoiu.main.presenter.mappers.*;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import static com.github.qoiu.main.StateStatus.*;
 
@@ -49,6 +50,12 @@ public class PresenterTables implements MainPresenterHashTables.Global {
     @Override
     public void setQuestionTemplate(long playerId, QuestionTemplate question) {
         questionTemplate.put(playerId, question);
+
+    }
+
+    @Override
+    public void clearQuestionTemplate() {
+        questionTemplate.clear();
     }
 
     @Override
@@ -59,6 +66,16 @@ public class PresenterTables implements MainPresenterHashTables.Global {
     @Override
     public boolean isGameExist(long playerId) {
         return games.containsKey(playerId) && games.get(playerId) != null;
+    }
+
+    @Override
+    public Set<Long> getGameSet() {
+        return games.keySet();
+    }
+
+    @Override
+    public void clearGames() {
+        games.clear();
     }
 
     @Override
